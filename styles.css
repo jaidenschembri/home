@@ -32,7 +32,6 @@ body {
     padding: 6px 10px;
     font-weight: bold;
     font-size: 16px;
-    text-shadow: 1px 1px #021024;
 }
   
 .content {
@@ -91,19 +90,12 @@ a:hover {
     max-width: 100%;
     height: auto;
     margin: 1px 0;
-    padding: 4px;
-    background: #1a1a1a;
+    padding: 1px;
     transition: transform 0.2s ease;
 }
   
 .blinkies img:hover {
     transform: translateY(-3px) rotate(-2deg);
-}
-  
-/* Header and Footer special */
-.header-window .content,
-.footer-window .content {
-    background: #1a1a1a;
 }
   
 /* Scrollbar */
@@ -130,7 +122,7 @@ a:hover {
 /* Stickerboard */
 .stickerboard {
     margin-top: 10px;
-    padding: 8px;
+    padding: 2px;
     text-align: center;
 }
   
@@ -158,18 +150,4 @@ a:hover {
 .stickers img:hover {
     transform: rotate(3deg) scale(1.05);
 }
-
-.pixel-images {
-    margin-top: 10px;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .pixel-images img {
-    width: 50px;
-    image-rendering: pixelated;
-    padding: 4px;
-  }
   
