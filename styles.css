@@ -160,7 +160,7 @@ a:hover {
     min-width: 300px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0px;
     flex-shrink: 0;                      /* 🧱 LOCK MAIN STACK TOO */
 }
 
@@ -176,3 +176,4 @@ a:hover {
     padding: 0;
     margin: 0;
 }
+
