@@ -7,8 +7,10 @@ body {
     padding: 20px 0;
     display: flex;
     justify-content: center;
+    min-width: 1000px; /* FORCE DESKTOP WIDTH */
+    overflow-x: auto;   /* ENABLE HORIZONTAL SCROLL ON SMALL SCREENS */
 }
-  
+
 .page {
     width: 95%;
     max-width: 1000px;
@@ -16,16 +18,16 @@ body {
     flex-direction: column;
     align-items: center;
 }
-  
+
 /* Windows */
-.window, .header-window, .footer-window {
+.window, .header-window {
     background: #121212;
     border: 3px double #0d6efd;
     box-shadow: 4px 4px 0px #084298;
     margin: 10px 0;
     overflow: hidden;
 }
-  
+
 .title-bar {
     background: linear-gradient(to right, #0d6efd, #084298);
     color: #ffffff;
@@ -33,36 +35,37 @@ body {
     font-weight: bold;
     font-size: 16px;
 }
-  
+
 .content {
     padding: 12px;
     font-size: 14px;
     line-height: 1.5;
 }
-  
+
 /* Columns Layout */
 .columns {
     display: flex;
     gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap !important;       /* 🔒 LOCK COLUMNS IN PLACE */
+    justify-content: space-between;
     align-items: flex-start;
-    margin: 15px 0;
 }
-  
+
 .sidebar {
     width: 180px;
+    flex-shrink: 0;                      /* 🧱 PREVENT SIDEBAR SHRINKING */
 }
-  
+
 .main {
     flex: 1;
     min-width: 300px;
 }
-  
+
 .rightbar {
     width: 180px;
+    flex-shrink: 0;                      /* 🧱 PREVENT RIGHTBAR SHRINKING */
 }
-  
+
 .rightbar .content {
     max-height: 190px;
     overflow-y: auto;
@@ -71,19 +74,19 @@ body {
     padding: 8px;
     box-sizing: border-box;
 }
-  
+
 /* Links */
 a {
     text-decoration: none;
     color: #339af0;
     font-weight: bold;
 }
-  
+
 a:hover {
     color: #74c0fc;
     text-decoration: underline;
 }
-  
+
 /* Blinkies */
 .blinkies img {
     display: inline-block;
@@ -93,52 +96,46 @@ a:hover {
     padding: 1px;
     transition: transform 0.2s ease;
 }
-  
+
 .blinkies img:hover {
     transform: translateY(-3px) rotate(-2deg);
 }
-  
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
-  
+
 ::-webkit-scrollbar-track {
     background: #0a0a0a;
     border-radius: 10px;
 }
-  
+
 ::-webkit-scrollbar-thumb {
     background: #0d6efd;
     border-radius: 10px;
     border: 2px solid #0a0a0a;
 }
-  
+
 ::-webkit-scrollbar-thumb:hover {
     background: #339af0;
 }
-  
+
 /* Stickerboard */
 .stickerboard {
     margin-top: 10px;
     padding: 2px;
     text-align: center;
 }
-  
-.stickerboard p {
-    margin: 0 0 6px 0;
-    font-size: 14px;
-    color: #339af0;
-}
-  
+
 .stickers {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 6px;
 }
-  
+
 .stickers img {
     width: 140px;
     height: auto;
@@ -146,8 +143,36 @@ a:hover {
     border-radius: 6px;
     transition: transform 0.2s ease;
 }
-  
+
 .stickers img:hover {
     transform: rotate(3deg) scale(1.05);
 }
-  
+
+.random-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    opacity: 1;
+}
+
+.main-stack {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;                      /* 🧱 LOCK MAIN STACK TOO */
+}
+
+.anime-window {
+    width: 100%;
+    max-width: 400px;
+}
+
+.anime-window .content {
+    width: 100%;
+    height: auto;
+    display: block;
+    padding: 0;
+    margin: 0;
+}
