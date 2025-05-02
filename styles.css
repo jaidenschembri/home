@@ -1,6 +1,6 @@
 /* Base */
 body {
-    background: #0a0a0a url('your-bg.png') repeat;
+    background: #0a0a0a;
     font-family: 'Courier New', Courier, monospace;
     color: #e0e0e0;
     margin: 0;
@@ -26,6 +26,12 @@ body {
     box-shadow: 4px 4px 0px #084298;
     margin: 10px 0;
     overflow: hidden;
+    width: 100%;
+}
+
+.header-window {
+    width: calc(180px + 300px + 180px + 24px + 48px); /* sidebar + main + rightbar + gaps + content padding */
+    margin: 10px auto;
 }
 
 .title-bar {
@@ -152,7 +158,6 @@ a:hover {
     width: 100%;
     height: auto;
     display: block;
-    opacity: 1;
 }
 
 .main-stack {
@@ -164,16 +169,36 @@ a:hover {
     flex-shrink: 0;                      /* 🧱 LOCK MAIN STACK TOO */
 }
 
+/* Anime Window */
 .anime-window {
     width: 100%;
     max-width: 400px;
+    display: none;
 }
 
 .anime-window .content {
     width: 100%;
     height: auto;
-    display: block;
     padding: 0;
     margin: 0;
+}
+
+/* Tomagotchi */
+.tomagotchi {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    transition: transform 0.3s ease;
+    gap: 10px;
+}
+
+.tomagotchi:hover {
+    transform: translateY(-5px);
+}
+
+.tomagotchi img {
+    max-width: 100%;
+    height: auto;
 }
 
