@@ -21,7 +21,6 @@ body {
 
 /* Windows */
 .window, .header-window {
-    background: #121212;
     border: 3px double #0d6efd;
     box-shadow: 4px 4px 0px #084298;
     margin: 10px 0;
@@ -58,7 +57,7 @@ body {
 }
 
 .sidebar {
-    width: 180px;
+    width: 150px;
     flex-shrink: 0;                      /* 🧱 PREVENT SIDEBAR SHRINKING */
 }
 
@@ -69,7 +68,8 @@ body {
 
 .rightbar {
     width: 180px;
-    flex-shrink: 0;                      /* 🧱 PREVENT RIGHTBAR SHRINKING */
+    flex-shrink: 0;
+    margin-left: 6px;                    
 }
 
 .rightbar .content {
@@ -160,15 +160,6 @@ a:hover {
     display: block;
 }
 
-.main-stack {
-    flex: 1;
-    min-width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 0px;
-    flex-shrink: 0;                      /* 🧱 LOCK MAIN STACK TOO */
-}
-
 /* Anime Window */
 .anime-window {
     width: 100%;
@@ -185,20 +176,22 @@ a:hover {
 
 /* Tomagotchi */
 .tomagotchi {
+    margin: 5px 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 20px 0;
-    transition: transform 0.3s ease;
+    flex-shrink: 0;
     gap: 10px;
 }
 
-.tomagotchi:hover {
-    transform: translateY(-5px);
-}
-
 .tomagotchi img {
-    max-width: 100%;
     height: auto;
 }
+
+/* Winamp Player */
+#winamp {
+    margin-top: 180px;
+    align-self: flex-start; /* aligns it left with the main content */
+}
+
 

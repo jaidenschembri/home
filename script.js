@@ -1,41 +1,41 @@
 window.addEventListener('DOMContentLoaded', () => {
-    const randomImage = document.querySelector('.random-image');
-    const animeWindow = document.querySelector('.anime-window');
-  
-    const localImages = [
-      'images/anime/1.png',
-      'images/anime/2.jpg',
-    ];
-  
-    if (localImages.length > 0) {
-      const randomIndex = Math.floor(Math.random() * localImages.length);
-      randomImage.src = localImages[randomIndex];
-    }
-  
-    // Preload
-    localImages.forEach(src => {
-      const img = new Image();
-      img.src = src;
+
+    const webamp = new Webamp({
+        initialTracks: [
+            {
+              metaData: {
+                artist: "Artist",
+                title: "Jaiden theme song"
+              },
+              url: "mp3/Better Off Alone x Clarity sped up.mp3"
+            },
+            {
+              metaData: {
+                artist: "Caramellagirls",
+                title: "Caramelldansen"
+              },
+              url: "mp3/caramelldansen.mp3"
+            },
+            {
+              metaData: {
+                artist: "Cascada",
+                title: "Everytime We Touch"
+              },
+              url: "mp3/everytimewetouch.mp3"
+            },
+            {
+                metaData: {
+                  artist: "Salem",
+                  title: "Better off Alone"
+                },
+                url: "mp3/boasalem.mp3"
+              },
+          ],
+          
+        initialSkin: {
+            url: "skins/makemesad.wsz"
+        }
     });
 
-    /*
-    const webamp = new Webamp({
-      initialTracks: [
-        {
-          metaData: {
-            artist: "Style Savvy 2008",
-            title: "Apartment Theme"
-          },
-          url: "your-mp3-file.mp3" // Replace with your MP3 URL
-        }
-      ],
-      initialSkin: {
-        url: "https://skins.webamp.org/skin/d632abee67ceb6878aa5ba3770bb7894/Tenchi Muyo - Aeka.wsz/"
-      }
-    });
-    
     webamp.renderWhenReady(document.getElementById("winamp"));
-    */
-    
-  });
-  
+});
