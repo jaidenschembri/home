@@ -23,13 +23,6 @@ window.addEventListener('DOMContentLoaded', () => {
               },
               url: "mp3/everytimewetouch.mp3"
             },
-            {
-                metaData: {
-                  artist: "Salem",
-                  title: "Better off Alone"
-                },
-                url: "mp3/boasalem.mp3"
-              },
           ],
           
         initialSkin: {
