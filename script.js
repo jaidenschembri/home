@@ -14,7 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 artist: "Caramellagirls",
                 title: "Caramelldansen"
               },
-              url: "mp3/caramelldansen.mp3"
+              url: "mp3/caramelldanses.mp3"
             },
             {
               metaData: {
