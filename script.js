@@ -23,6 +23,13 @@ window.addEventListener('DOMContentLoaded', () => {
               },
               url: "mp3/everytimewetouch.mp3"
             },
+            {
+              metaData: {
+                artist: "carti",
+                title: "OPM BABI"
+              },
+              url: "mp3/OPM BABI.mp3"
+            },
           ],
           
         initialSkin: {
