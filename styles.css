@@ -235,18 +235,21 @@ body.light-theme ::-webkit-scrollbar-thumb {
   width: 100%;
   max-width: 1000px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .ascii .content {
-  font-family: monospace;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 4px;
   line-height: 1.2;
+  letter-spacing: 0;
   text-align: center;
   white-space: pre;
   display: block;
-  overflow-x: auto;
+  width: max-content;
+  max-width: 100%;
   margin: 0 auto;
-  width: 100%;
-  max-width: 1000px;
-  box-sizing: border-box;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
 }
