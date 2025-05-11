@@ -258,3 +258,13 @@ body.light-theme ::-webkit-scrollbar-thumb {
   }
 }
 
+.page {
+  width: 1000px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header-window {
+  width: 662px;
+  margin: 10px auto;
+}
