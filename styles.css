@@ -231,30 +231,22 @@ body.light-theme ::-webkit-scrollbar-thumb {
   border: 2px solid #f0f0f0;
 }
 
+.ascii {
+  width: 100%;
+  max-width: 1000px;
+  overflow-x: auto;
+}
+
 .ascii .content {
   font-family: monospace;
-  white-space: pre;
-  overflow-x: auto;
   font-size: 4px;
   line-height: 1.2;
-  display: flex;
-  justify-content: center;
   text-align: center;
+  white-space: pre;
+  display: block;
+  overflow-x: auto;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1000px;
+  box-sizing: border-box;
 }
-
-@media only screen and (max-width: 1024px) {
-  html, body {
-    width: 1024px;
-    overflow-x: scroll;
-  }
-
-  .page {
-    width: 1000px;
-  }
-
-  .ascii .content {
-    font-size: 4px;
-    line-height: 1.2;
-  }
-}
-
