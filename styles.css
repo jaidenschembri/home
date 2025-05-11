@@ -242,3 +242,19 @@ body.light-theme ::-webkit-scrollbar-thumb {
   text-align: center;
 }
 
+@media only screen and (max-width: 1024px) {
+  html, body {
+    width: 1024px;
+    overflow-x: scroll;
+  }
+
+  .page {
+    width: 1000px;
+  }
+
+  .ascii .content {
+    font-size: 4px;
+    line-height: 1.2;
+  }
+}
+
