@@ -29,7 +29,7 @@ body {
 }
 
 .header-window {
-  width: calc(110px + 300px + 180px + 24px + 48px);
+  width: 662px;
   margin: 10px auto;
 }
 
