@@ -250,6 +250,19 @@ body.light-theme ::-webkit-scrollbar-thumb {
   width: max-content;
   max-width: 100%;
   margin: 0 auto;
-  -webkit-text-size-adjust: none;
-  text-size-adjust: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  body {
+    min-width: auto;
+    padding: 10px;
+  }
+  .ascii .content {
+    font-size: 4px; /* Try 5px if warping persists */
+    line-height: 1.2;
+    width: max-content;
+    max-width: 100%;
+  }
 }
