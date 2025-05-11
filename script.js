@@ -33,9 +33,16 @@ window.addEventListener('DOMContentLoaded', () => {
           ],
           
         initialSkin: {
-            url: "skins/makemesad.wsz"
+            url: "skins/As_Simple_As_It_Gets.wsz"
         }
     });
 
     webamp.renderWhenReady(document.getElementById("winamp"));
 });
+
+ const toggleBtn = document.getElementById('theme-toggle');
+  toggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light-theme');
+  });
+
+  
