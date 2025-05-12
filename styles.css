@@ -256,7 +256,6 @@ body.light-theme ::-webkit-scrollbar-thumb {
   -webkit-text-size-adjust: none !important;
   text-size-adjust: none !important;
   
-  
   /* Hardware acceleration can help with rendering */
   transform: translateZ(0);
 }
