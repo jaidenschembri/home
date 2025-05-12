@@ -199,24 +199,6 @@ a:hover {
   align-self: flex-start;
 }
 
-/* === THEME TOGGLE === */
-#theme-toggle {
-  background: none;
-  border: none;
-  color: #ffffff;
-  font-size: 12px;
-  line-height: 1;
-  height: 100%;
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-#theme-toggle:hover {
-  text-decoration: underline;
-}
-
 /* === LIGHT MODE OVERRIDES === */
 body.light-theme {
   background: #f0f0f0;
@@ -291,4 +273,30 @@ body.light-theme .title-bar {
   
   /* Hardware acceleration can help with rendering */
   transform: translateZ(0);
+}
+
+/* Updated Theme toggle styling */
+#theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  height: 20px;
+}
+
+/* Adjust SVG colors based on theme */
+body:not(.light-theme) #toggleIcon .moon,
+body:not(.light-theme) #toggleIcon .sun,
+body:not(.light-theme) #toggleIcon .rays {
+  stroke: #ffffff;
+}
+
+body.light-theme #toggleIcon .moon,
+body.light-theme #toggleIcon .sun,
+body.light-theme #toggleIcon .rays {
+  stroke: #000000;
 }

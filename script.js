@@ -40,20 +40,30 @@ window.addEventListener('DOMContentLoaded', () => {
     webamp.renderWhenReady(document.getElementById("winamp"));
 });
 
- const toggleBtn = document.getElementById('theme-toggle');
 
-// Set light mode by default if not already saved
-if (!localStorage.getItem('theme')) {
-  document.body.classList.add('light-theme');
-  localStorage.setItem('theme', 'light');
-} else if (localStorage.getItem('theme') === 'light') {
-  document.body.classList.add('light-theme');
-}
+ const toggleBtn = document.getElementById('theme-toggle');
+const toggleIcon = document.getElementById('toggleIcon');
+let isDark = true; // Default to dark mode
 
 toggleBtn.addEventListener('click', () => {
+  // Toggle the body class for theme switching
   document.body.classList.toggle('light-theme');
-  const theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
-  localStorage.setItem('theme', theme);
+  
+  // Update the icon animation
+  if (isDark) {
+    toggleIcon.classList.remove('dark');
+    toggleIcon.classList.add('to-light', 'light');
+  } else {
+    toggleIcon.classList.remove('light');
+    toggleIcon.classList.add('to-dark', 'dark');
+  }
+  
+  // Reset animation classes after animation completes
+  setTimeout(() => {
+    toggleIcon.classList.remove('to-light', 'to-dark');
+  }, 500);
+  
+  isDark = !isDark;
 });
 
   (function initStarfield() {
