@@ -230,7 +230,6 @@ body.light-theme ::-webkit-scrollbar-thumb {
   background: #000000;
   border: 2px solid #f0f0f0;
 }
-
 .ascii {
   width: 100%;
   max-width: 1000px;
@@ -240,29 +239,31 @@ body.light-theme ::-webkit-scrollbar-thumb {
 }
 
 .ascii .content {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 4px;
-  line-height: 1.2;
-  letter-spacing: 0;
-  text-align: center;
-  white-space: pre;
+  /* Use a consistent fixed-width font */
+  font-family: "Courier New", Courier, monospace;
+  /* Force exact sizing */
+  font-size: 4px !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  /* Critical for preventing text wrapping */
+  white-space: pre !important;
   display: block;
   width: max-content;
-  max-width: 100%;
   margin: 0 auto;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-@media screen and (max-width: 768px) {
-  body {
-    min-width: auto;
-    padding: 10px;
-  }
-  .ascii .content {
-    font-size: 4px; /* Try 5px if warping persists */
-    line-height: 1.2;
-    width: max-content;
-    max-width: 100%;
-  }
+  padding: 0;
+  
+  /* This is the critical fix for mobile Safari */
+  -webkit-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  
+  /* Ensure fixed-width character rendering */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  
+  /* Prevent font smoothing which can distort ASCII */
+  -webkit-font-smoothing: none;
+  font-smooth: none;
+  
+  /* Hardware acceleration can help with rendering */
+  transform: translateZ(0);
 }
