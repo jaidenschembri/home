@@ -256,13 +256,6 @@ body.light-theme ::-webkit-scrollbar-thumb {
   -webkit-text-size-adjust: none !important;
   text-size-adjust: none !important;
   
-  /* Ensure fixed-width character rendering */
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-  
-  /* Prevent font smoothing which can distort ASCII */
-  -webkit-font-smoothing: none;
-  font-smooth: none;
   
   /* Hardware acceleration can help with rendering */
   transform: translateZ(0);
