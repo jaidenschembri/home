@@ -19,6 +19,25 @@ body {
   align-items: center;
 }
 
+#space-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  pointer-events: none;
+}
+
+body.light-theme #space-bg {
+  background: #f0f0f0;
+}
+
+body:not(.light-theme) #space-bg {
+  background: #0a0a0a;
+}
+
 /* === WINDOW STYLES === */
 .window,
 .header-window {
@@ -230,6 +249,20 @@ body.light-theme ::-webkit-scrollbar-thumb {
   background: #000000;
   border: 2px solid #f0f0f0;
 }
+
+/* === WINDOW BACKGROUNDS === */
+.window,
+.header-window,
+.title-bar {
+  background-color: #000000; /* Dark mode default */
+}
+
+body.light-theme .window,
+body.light-theme .header-window,
+body.light-theme .title-bar {
+  background-color: #ffffff;
+}
+
 .ascii {
   width: 100%;
   max-width: 1000px;
