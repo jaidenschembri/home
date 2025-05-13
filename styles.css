@@ -35,7 +35,7 @@ body.light-theme #space-bg {
 }
 
 body:not(.light-theme) #space-bg {
-  background: #0a0a0a;
+  background: #000000;
 }
 
 /* === WINDOW STYLES === */
