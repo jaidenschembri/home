@@ -31,7 +31,7 @@ body {
 }
 
 body.light-theme #space-bg {
-  background: #f0f0f0;
+  background: #ffffff;
 }
 
 body:not(.light-theme) #space-bg {
@@ -201,7 +201,7 @@ a:hover {
 
 /* === LIGHT MODE OVERRIDES === */
 body.light-theme {
-  background: #f0f0f0;
+  background: #ffffff;
   color: #000000;
 }
 
