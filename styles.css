@@ -251,29 +251,27 @@ body.light-theme .title-bar {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
+  border: none !important;
+  background: none !important;
 }
 
 .ascii .content {
-  /* Use a consistent fixed-width font */
   font-family: "Courier New", Courier, monospace;
-  /* Force exact sizing */
   font-size: 8px !important;
   line-height: 1 !important;
   letter-spacing: 0 !important;
-  /* Critical for preventing text wrapping */
   white-space: pre !important;
   display: block;
   width: max-content;
   margin: 0 auto;
   padding: 0;
-  
-  /* This is the critical fix for mobile Safari */
+  background: none !important;
+  border: none !important;
   -webkit-text-size-adjust: none !important;
   text-size-adjust: none !important;
-  
-  /* Hardware acceleration can help with rendering */
   transform: translateZ(0);
 }
+
 
 /* Updated Theme toggle styling */
 #theme-toggle {
