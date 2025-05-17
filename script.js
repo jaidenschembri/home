@@ -176,6 +176,7 @@ function initStarfield() {
 // === AUTH MODAL LOGIC ===
 function initAuthModal() {
     // Configure API URL based on environment
+    // Use the same URL in both local development and production since our changes are deployed
     const API_URL = 'https://still-wood-e0a1.jaidenschembri1.workers.dev';
     console.log('Using API URL:', API_URL);
     
@@ -195,12 +196,17 @@ function initAuthModal() {
     function showModal() {
         modal.style.display = 'block';
         overlay.style.display = 'block';
+        modal.style.opacity = 1;
+        overlay.style.opacity = 1;
         showLogin();
     }
     function hideModal() {
         modal.style.display = 'none';
         overlay.style.display = 'none';
+        modal.style.opacity = 1;
+        overlay.style.opacity = 1;
         responseDiv.textContent = '';
+        responseDiv.className = '';
         loginForm.reset();
         registerForm.reset();
     }
@@ -278,6 +284,8 @@ function initAuthModal() {
         e.preventDefault();
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
+        responseDiv.textContent = "Logging in...";
+        
         try {
             const response = await fetch(`${API_URL}/api/login`, {
                 method: 'POST',
@@ -286,12 +294,34 @@ function initAuthModal() {
                 mode: 'cors'
             });
             const data = await response.json();
-            responseDiv.textContent = JSON.stringify(data, null, 2);
+            
             if (response.ok && data.token) {
                 localStorage.setItem('authToken', data.token);
-                setTimeout(hideModal, 1200); // Hide modal after short delay
+                responseDiv.className = 'auth-success';
+                responseDiv.textContent = `Welcome, ${data.user.username}!`;
+                
+                // Fade out and hide modal
+                setTimeout(() => {
+                    const fadeEffect = setInterval(() => {
+                        if (!modal.style.opacity) {
+                            modal.style.opacity = 1;
+                            overlay.style.opacity = 1;
+                        }
+                        if (modal.style.opacity > 0) {
+                            modal.style.opacity -= 0.1;
+                            overlay.style.opacity -= 0.1;
+                        } else {
+                            clearInterval(fadeEffect);
+                            hideModal();
+                        }
+                    }, 50);
+                }, 1000);
+            } else {
+                responseDiv.className = 'auth-error';
+                responseDiv.textContent = data.error || 'Login failed. Please check your credentials.';
             }
         } catch (error) {
+            responseDiv.className = 'auth-error';
             responseDiv.textContent = `Error: ${error.message}`;
         }
     });

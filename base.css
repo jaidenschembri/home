@@ -377,3 +377,24 @@ input:focus {
   box-shadow: none !important;
   border-color: inherit !important;
 }
+
+/* Auth Modal Styles Enhancement */
+#auth-response {
+    margin: 10px 0;
+    padding: 8px;
+    border-radius: 4px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.auth-success {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border-left: 4px solid #4CAF50;
+}
+
+.auth-error {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+    border-left: 4px solid #F44336;
+}

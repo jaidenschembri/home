@@ -45,12 +45,13 @@ export class MyDurableObject extends DurableObject {
 // Main Worker entry point for authentication API
 
 // Helper function to generate a response
-function jsonResponse(data, status = 200) {
+function jsonResponse(data, status = 200, request = null) {
+	const origin = request?.headers?.get('Origin') || 'https://jaidenschembri.github.io';
 	return new Response(JSON.stringify(data), {
 		status,
 		headers: {
 			'Content-Type': 'application/json',
-			'Access-Control-Allow-Origin': 'https://jaidenschembri.github.io',  // GitHub Pages origin
+			'Access-Control-Allow-Origin': origin,  // Allow the requesting origin or GitHub Pages
 			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 			'Access-Control-Max-Age': '86400',   // Cache preflight requests for 24 hours
@@ -69,7 +70,7 @@ async function handleLogin(request, env) {
 		console.log(`Attempting login for user: ${username}`);
 
 		if (!username || !password) {
-			return jsonResponse({ error: 'Username and password are required' }, 400);
+			return jsonResponse({ error: 'Username and password are required' }, 400, request);
 		}
 
 		// Get the user Durable Object
@@ -94,7 +95,7 @@ async function handleLogin(request, env) {
 		return response;
 	} catch (error) {
 		console.error('Login error:', error);
-		return jsonResponse({ error: `Login failed: ${error.message}` }, 500);
+		return jsonResponse({ error: `Login failed: ${error.message}` }, 500, request);
 	}
 }
 
@@ -105,10 +106,10 @@ async function handleRegister(request, env) {
 		console.log(`Attempting registration for user: ${username}, email: ${email}`);
 
 		if (!email || !username || !password || !inviteCode) {
-			return jsonResponse({ error: 'Email, username, password, and invite code are required' }, 400);
+			return jsonResponse({ error: 'Email, username, password, and invite code are required' }, 400, request);
 		}
 		if (inviteCode !== INVITE_CODE) {
-			return jsonResponse({ error: 'Invalid invite code' }, 403);
+			return jsonResponse({ error: 'Invalid invite code' }, 403, request);
 		}
 
 		// Get the user Durable Object - use username as the consistent identifier
@@ -133,7 +134,7 @@ async function handleRegister(request, env) {
 		return response;
 	} catch (error) {
 		console.error('Registration error:', error);
-		return jsonResponse({ error: `Registration failed: ${error.message}` }, 500);
+		return jsonResponse({ error: `Registration failed: ${error.message}` }, 500, request);
 	}
 }
 
@@ -142,13 +143,14 @@ export default {
 	async fetch(request, env, ctx) {
 		const url = new URL(request.url);
 		const path = url.pathname;
+		const origin = request.headers.get('Origin');
 
 		// Handle CORS preflight requests
 		if (request.method === 'OPTIONS') {
 			return new Response(null, {
 				status: 204,
 				headers: {
-					'Access-Control-Allow-Origin': 'https://jaidenschembri.github.io',
+					'Access-Control-Allow-Origin': origin || 'https://jaidenschembri.github.io',
 					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 					'Access-Control-Max-Age': '86400',
@@ -166,7 +168,7 @@ export default {
 		}
 
 		// Default response for unhandled routes
-		return jsonResponse({ error: 'Not found' }, 404);
+		return jsonResponse({ error: 'Not found' }, 404, request);
 	}
 };
 
@@ -224,7 +226,19 @@ export class UsersObject extends DurableObject {
 			password: hashedPassword,
 			createdAt: new Date().toISOString()
 		});
-		return jsonResponse({ success: true, message: 'User registered successfully' });
+		
+		// Use dynamic origin for response
+		const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
+		return new Response(JSON.stringify({ success: true, message: 'User registered successfully' }), {
+			status: 200,
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': origin,
+				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+				'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+				'Access-Control-Max-Age': '86400'
+			}
+		});
 	}
 
 	async login(request) {
@@ -232,16 +246,49 @@ export class UsersObject extends DurableObject {
 		// Get user data
 		const userData = await this.state.storage.get("userData");
 		if (!userData) {
-			return jsonResponse({ error: 'User not found' }, 404);
+			// Use dynamic origin for error response
+			const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
+			return new Response(JSON.stringify({ error: 'User not found' }), {
+				status: 404,
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': origin,
+					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+					'Access-Control-Max-Age': '86400'
+				}
+			});
 		}
 		// Check if username matches (allow login with either username or email)
 		if (userData.username !== username && userData.email !== username) {
-			return jsonResponse({ error: 'Invalid credentials' }, 401);
+			// Use dynamic origin for error response
+			const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
+			return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+				status: 401,
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': origin,
+					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+					'Access-Control-Max-Age': '86400'
+				}
+			});
 		}
 		// Check if password matches
 		const hashedPassword = await this.hashPassword(password);
 		if (userData.password !== hashedPassword) {
-			return jsonResponse({ error: 'Invalid credentials' }, 401);
+			// Use dynamic origin for error response
+			const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
+			return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+				status: 401,
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': origin,
+					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+					'Access-Control-Max-Age': '86400'
+				}
+			});
 		}
 		// Generate a simple token (in a real app, use a proper JWT library)
 		const token = crypto.randomUUID();
@@ -251,12 +298,24 @@ export class UsersObject extends DurableObject {
 			username: userData.username,
 			expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
 		});
-		return jsonResponse({
+		
+		// Use dynamic origin for success response
+		const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
+		return new Response(JSON.stringify({
 			success: true,
 			token,
 			user: {
 				email: userData.email,
 				username: userData.username
+			}
+		}), {
+			status: 200,
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': origin,
+				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+				'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+				'Access-Control-Max-Age': '86400'
 			}
 		});
 	}
