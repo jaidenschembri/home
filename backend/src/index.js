@@ -46,12 +46,15 @@ export class MyDurableObject extends DurableObject {
 
 // Helper function to generate a response
 function jsonResponse(data, status = 200, request = null) {
-	const origin = request?.headers?.get('Origin') || 'https://jaidenschembri.github.io';
+	// Get the origin from the request or use a wildcard as fallback
+	const origin = request?.headers?.get('Origin');
+	console.log(`Request origin in jsonResponse: ${origin}`);
+	
 	return new Response(JSON.stringify(data), {
 		status,
 		headers: {
 			'Content-Type': 'application/json',
-			'Access-Control-Allow-Origin': origin,  // Allow the requesting origin or GitHub Pages
+			'Access-Control-Allow-Origin': origin || '*',  // Allow any origin
 			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 			'Access-Control-Max-Age': '86400',   // Cache preflight requests for 24 hours
@@ -84,9 +87,16 @@ async function handleLogin(request, env) {
 		
 		console.log(`Calling Durable Object with URL: ${doURL.toString()}`);
 		
+		// Forward the Origin header to the Durable Object
+		const headers = new Headers();
+		if (request.headers.has('Origin')) {
+			headers.set('Origin', request.headers.get('Origin'));
+		}
+		
 		// Call the login method on the Durable Object
 		const response = await userObj.fetch(doURL.toString(), {
 			method: 'POST',
+			headers,
 			body: JSON.stringify({ username, password }),
 		});
 		
@@ -123,9 +133,16 @@ async function handleRegister(request, env) {
 		
 		console.log(`Calling Durable Object with URL: ${doURL.toString()}`);
 		
+		// Forward the Origin header to the Durable Object
+		const headers = new Headers();
+		if (request.headers.has('Origin')) {
+			headers.set('Origin', request.headers.get('Origin'));
+		}
+		
 		// Call the register method on the Durable Object
 		const response = await userObj.fetch(doURL.toString(), {
 			method: 'POST',
+			headers,
 			body: JSON.stringify({ email, username, password, inviteCode })
 		});
 		
@@ -147,10 +164,11 @@ export default {
 
 		// Handle CORS preflight requests
 		if (request.method === 'OPTIONS') {
+			console.log(`OPTIONS request from origin: ${origin}`);
 			return new Response(null, {
 				status: 204,
 				headers: {
-					'Access-Control-Allow-Origin': origin || 'https://jaidenschembri.github.io',
+					'Access-Control-Allow-Origin': origin || '*',
 					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 					'Access-Control-Max-Age': '86400',
@@ -180,6 +198,23 @@ export class UsersObject extends DurableObject {
 		this.env = env;
 	}
 
+	// Helper function to create a proper CORS response
+	corsResponse(data, status = 200, request) {
+		const origin = request?.headers?.get('Origin');
+		console.log(`Request origin: ${origin}`);
+		
+		return new Response(JSON.stringify(data), {
+			status,
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Origin': origin || '*',  // Allow any origin or the specific one
+				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+				'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+				'Access-Control-Max-Age': '86400',
+			},
+		});
+	}
+
 	// Simple password hashing (in a real app, use a proper hashing library)
 	async hashPassword(password) {
 		const encoder = new TextEncoder();
@@ -205,18 +240,18 @@ export class UsersObject extends DurableObject {
 		}
 
 		console.log(`Path not matched: ${path}`);
-		return jsonResponse({ error: `Not found: ${path}` }, 404);
+		return jsonResponse({ error: `Not found: ${path}` }, 404, request);
 	}
 
 	async register(request) {
 		const { email, username, password, inviteCode } = await request.json();
 		if (!inviteCode || inviteCode !== INVITE_CODE) {
-			return jsonResponse({ error: 'Invalid invite code' }, 403);
+			return this.corsResponse({ error: 'Invalid invite code' }, 403, request);
 		}
 		// Check if user already exists
 		const existingUser = await this.state.storage.get("userData");
 		if (existingUser) {
-			return jsonResponse({ error: 'User already exists' }, 409);
+			return this.corsResponse({ error: 'User already exists' }, 409, request);
 		}
 		// Create and store user data with hashed password
 		const hashedPassword = await this.hashPassword(password);
@@ -227,18 +262,7 @@ export class UsersObject extends DurableObject {
 			createdAt: new Date().toISOString()
 		});
 		
-		// Use dynamic origin for response
-		const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
-		return new Response(JSON.stringify({ success: true, message: 'User registered successfully' }), {
-			status: 200,
-			headers: {
-				'Content-Type': 'application/json',
-				'Access-Control-Allow-Origin': origin,
-				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-				'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-				'Access-Control-Max-Age': '86400'
-			}
-		});
+		return this.corsResponse({ success: true, message: 'User registered successfully' }, 200, request);
 	}
 
 	async login(request) {
@@ -246,49 +270,16 @@ export class UsersObject extends DurableObject {
 		// Get user data
 		const userData = await this.state.storage.get("userData");
 		if (!userData) {
-			// Use dynamic origin for error response
-			const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
-			return new Response(JSON.stringify({ error: 'User not found' }), {
-				status: 404,
-				headers: {
-					'Content-Type': 'application/json',
-					'Access-Control-Allow-Origin': origin,
-					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-					'Access-Control-Max-Age': '86400'
-				}
-			});
+			return this.corsResponse({ error: 'User not found' }, 404, request);
 		}
 		// Check if username matches (allow login with either username or email)
 		if (userData.username !== username && userData.email !== username) {
-			// Use dynamic origin for error response
-			const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
-			return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
-				status: 401,
-				headers: {
-					'Content-Type': 'application/json',
-					'Access-Control-Allow-Origin': origin,
-					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-					'Access-Control-Max-Age': '86400'
-				}
-			});
+			return this.corsResponse({ error: 'Invalid credentials' }, 401, request);
 		}
 		// Check if password matches
 		const hashedPassword = await this.hashPassword(password);
 		if (userData.password !== hashedPassword) {
-			// Use dynamic origin for error response
-			const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
-			return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
-				status: 401,
-				headers: {
-					'Content-Type': 'application/json',
-					'Access-Control-Allow-Origin': origin,
-					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-					'Access-Control-Max-Age': '86400'
-				}
-			});
+			return this.corsResponse({ error: 'Invalid credentials' }, 401, request);
 		}
 		// Generate a simple token (in a real app, use a proper JWT library)
 		const token = crypto.randomUUID();
@@ -299,24 +290,13 @@ export class UsersObject extends DurableObject {
 			expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
 		});
 		
-		// Use dynamic origin for success response
-		const origin = request.headers.get('Origin') || 'https://jaidenschembri.github.io';
-		return new Response(JSON.stringify({
+		return this.corsResponse({
 			success: true,
 			token,
 			user: {
 				email: userData.email,
 				username: userData.username
 			}
-		}), {
-			status: 200,
-			headers: {
-				'Content-Type': 'application/json',
-				'Access-Control-Allow-Origin': origin,
-				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-				'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-				'Access-Control-Max-Age': '86400'
-			}
-		});
+		}, 200, request);
 	}
 }

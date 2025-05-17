@@ -1,0 +1,50 @@
+/* Auth Modal Styles */
+#auth-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 200;
+  max-width: 400px;
+  min-width: 320px;
+}
+
+#auth-modal .title-bar {
+  justify-content: space-between;
+}
+
+#auth-modal-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#auth-modal .content {
+  height: 370px;
+  min-height: 370px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#loginForm, #registerForm {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+#show-register-link, #show-login-link {
+  margin-top: 10px;
+  font-size: 13px;
+  text-align: center;
+}
+
+#auth-response {
+  margin-top: 16px;
+  min-height: 24px;
+  font-size: 13px;
+  white-space: pre-wrap;
+} 

@@ -137,3 +137,64 @@ body.light-theme #auth-modal .content button:hover {
 body.light-theme #auth-modal .content input::placeholder {
   color: var(--modal-placeholder-fg-light);
 }
+
+/* Theme Toggle Styles */
+#theme-toggle {
+  color: var(--color-fg);
+}
+
+#theme-toggle img {
+  vertical-align: middle;
+}
+
+/* Theme Toggle SVG Styles */
+.moon, .sun, .rays {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* Animation definitions */
+@keyframes raysFadeIn {
+  from { opacity: 0; stroke-dashoffset: 20; }
+  to { opacity: 1; stroke-dashoffset: 0; }
+}
+
+@keyframes raysFadeOut {
+  from { opacity: 1; stroke-dashoffset: 0; }
+  to { opacity: 0; stroke-dashoffset: 20; }
+}
+
+@keyframes moonToSun {
+  from { d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50'); }
+  to { d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50'); }
+}
+
+@keyframes sunToMoon {
+  from { d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50'); }
+  to { d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50'); }
+}
+
+/* Dark mode (moon) styles */
+.dark .sun { display: none; }
+.dark .moon { display: block; }
+.dark .rays { opacity: 0; }
+
+/* Light mode (sun) styles */
+.light .moon { display: none; }
+.light .sun { display: block; }
+.light .rays { opacity: 1; }
+
+/* Animation classes */
+.to-light .moon-path {
+  animation: moonToSun 0.5s forwards ease-in-out;
+}
+.to-dark .sun-path {
+  animation: sunToMoon 0.5s forwards ease-in-out;
+}
+.to-light .rays {
+  animation: raysFadeIn 0.5s forwards ease-in-out;
+}
+.to-dark .rays {
+  animation: raysFadeOut 0.5s forwards ease-in-out;
+}

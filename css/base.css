@@ -15,16 +15,12 @@
   --content-font-size: 14px;
   --content-line-height: 1.5;
   --sidebar-width: 150px;
-  --rightbar-width: 180px;
-  --rightbar-margin-left: 3px;
   --link-fg: #ffffff;
   --link-hover-underline: underline;
   --scrollbar-width: 8px;
   --scrollbar-bg: #0a0a0a;
   --scrollbar-thumb: #ffffff;
   --scrollbar-thumb-border: #0a0a0a;
-  --sticker-img-width: 140px;
-  --sticker-img-radius: 6px;
   --signin-btn-fg: #fff;
   --signin-btn-radius: 4px;
   --modal-bg: rgba(20,20,20,0.88);
@@ -122,50 +118,32 @@ body {
   flex-shrink: 0;
 }
 
-.main {
-  flex: 1;
-  min-width: 300px;
-}
-
-.rightbar {
-  width: var(--rightbar-width);
-  flex-shrink: 0;
-  margin-left: var(--rightbar-margin-left);
-}
-
-.rightbar .content {
-  max-height: 190px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  text-align: center;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
 /* === LINKS === */
+.link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link-list li {
+  margin-bottom: 4px;
+}
+
+.link-list li:last-child {
+  margin-bottom: 0;
+}
+
 a {
   text-decoration: none;
   color: var(--link-fg);
   font-size: 12px;
   font-style: italic;
+  transition: opacity 0.2s ease;
 }
 
 a:hover {
   text-decoration: var(--link-hover-underline);
-}
-
-/* === BLINKIES === */
-.blinkies img {
-  display: inline-block;
-  max-width: 100%;
-  height: auto;
-  margin: 2px 0;
-  padding: 1px;
-  transition: transform 0.2s ease;
-}
-
-.blinkies img:hover {
-  transform: translateY(-3px) rotate(-2deg);
+  opacity: 0.8;
 }
 
 /* === SCROLLBAR === */
@@ -183,38 +161,6 @@ a:hover {
   background: var(--scrollbar-thumb);
   border-radius: 10px;
   border: 1.5px solid var(--scrollbar-thumb-border);
-}
-
-/* === STICKERS === */
-.stickerboard {
-  margin-top: 10px;
-  padding: 2px;
-  text-align: center;
-}
-
-.stickers {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-}
-
-.stickers img {
-  width: var(--sticker-img-width);
-  height: auto;
-  padding: 4px;
-  border-radius: var(--sticker-img-radius);
-  transition: transform 0.2s ease;
-}
-
-.stickers img:hover {
-  transform: rotate(3deg) scale(1.05);
-}
-
-/* === WINAMP === */
-#winamp {
-  margin-top: 180px;
-  align-self: flex-start;
 }
 
 /* === ASCII === */
@@ -238,6 +184,31 @@ a:hover {
   width: max-content;
   margin: 0 auto;
   padding: 0;
+  background: none !important;
+  border: none !important;
+  -webkit-text-size-adjust: none !important;
+  text-size-adjust: none !important;
+  transform: translateZ(0);
+}
+
+.ascii-art {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ascii-art pre {
+  margin: 0;
+  padding: 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 8px !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  white-space: pre !important;
+  display: block;
+  width: max-content;
   background: none !important;
   border: none !important;
   -webkit-text-size-adjust: none !important;
@@ -387,14 +358,139 @@ input:focus {
     transition: all 0.3s ease;
 }
 
-.auth-success {
-    background-color: rgba(76, 175, 80, 0.2);
-    color: #4CAF50;
-    border-left: 4px solid #4CAF50;
+/* === Autofill Input Styles === */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: var(--modal-input-fg) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px transparent inset !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--modal-input-fg) !important;
 }
 
-.auth-error {
-    background-color: rgba(244, 67, 54, 0.2);
-    color: #F44336;
-    border-left: 4px solid #F44336;
+#auth-modal .content input:-webkit-autofill::first-line {
+  font-family: var(--base-font);
+  font-size: 14px;
+  color: var(--modal-input-fg) !important;
+}
+
+/* Handle Firefox and other browsers */
+@-moz-document url-prefix() {
+  input:-moz-autofill,
+  input:-moz-autofill:focus {
+    transition: background-color 5000s ease-in-out 0s !important;
+    background-color: transparent !important;
+    color: var(--modal-input-fg) !important;
+  }
+}
+
+input:autofill,
+input:autofill:hover, 
+input:autofill:focus {
+  background-color: transparent !important;
+  color: var(--modal-input-fg) !important;
+}
+
+/* Light theme autofill overrides */
+body.light-theme input:-webkit-autofill,
+body.light-theme input:-webkit-autofill:hover,
+body.light-theme input:-webkit-autofill:focus,
+body.light-theme input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--modal-input-fg-light) !important;
+  color: var(--modal-input-fg-light) !important;
+}
+
+body.light-theme #auth-modal .content input:-webkit-autofill::first-line {
+  color: var(--modal-input-fg-light) !important;
+}
+
+body.light-theme input:autofill,
+body.light-theme input:autofill:hover, 
+body.light-theme input:autofill:focus {
+  color: var(--modal-input-fg-light) !important;
+}
+
+@-moz-document url-prefix() {
+  body.light-theme input:-moz-autofill,
+  body.light-theme input:-moz-autofill:focus {
+    color: var(--modal-input-fg-light) !important;
+  }
+}
+
+/* Prevent font changes in credential suggestion dropdown */
+input:-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
+/* For Chromium browsers */
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+}
+
+/* Target the autofill dropdown */
+input:-internal-autofill-selected,
+input:-internal-autofill-previewed {
+  font-family: var(--base-font) !important;
+}
+
+/* Force consistent styling for autofill suggestion dropdown */
+@supports (-webkit-appearance: none) {
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    input:-webkit-autofill-strong-password-suggestion,
+    input:-webkit-autofill-suggestion {
+      font-family: var(--base-font) !important;
+    }
+  }
+}
+
+/* Force font in Chrome's suggestion dropdown */
+input:-webkit-autofill-selected {
+  font-family: var(--base-font) !important;
+}
+
+/* For dropdown items in various browsers */
+::-webkit-input-placeholder,
+::placeholder,
+::-webkit-datetime-edit,
+::-webkit-datetime-edit-fields-wrapper,
+::-webkit-datetime-edit-text,
+::-webkit-datetime-edit-month-field,
+::-webkit-datetime-edit-day-field,
+::-webkit-datetime-edit-year-field,
+::-webkit-inner-spin-button,
+::-webkit-calendar-picker-indicator,
+::-webkit-clear-button,
+::-webkit-search-cancel-button,
+::-webkit-search-results-button,
+::-webkit-search-results-decoration,
+::-webkit-contacts-auto-fill-button,
+::-webkit-credentials-auto-fill-button,
+::-webkit-credit-card-auto-fill-button {
+  font-family: var(--base-font) !important;
+}
+
+/* === WINAMP === */
+#winamp {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  margin-top: 180px;
+  align-self: flex-start;
+}
+
+/* === TITLE BAR === */
+.title-text {
+  margin: 0;
+  font-size: 12px;
+  font-weight: normal;
+  text-transform: lowercase;
 }

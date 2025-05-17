@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=1000, user-scalable=yes">
   <link rel="icon" href="images/icons/deer.gif" type="image/x-icon">
   <title>Jaiden</title>
-  <link rel="stylesheet" href="base.css">
-  <link rel="stylesheet" href="theme.css">
-  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
 
@@ -19,59 +20,6 @@
   <span class="title-text">welcome</span>
   <div id="theme-toggle" title="Toggle Theme">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20">
-      <style>
-        .moon, .sun, .rays {
-          fill: none;
-          stroke-width: 4;
-          stroke-linecap: round;
-        }
-        
-        /* Animation definitions */
-        @keyframes raysFadeIn {
-          from { opacity: 0; stroke-dashoffset: 20; }
-          to { opacity: 1; stroke-dashoffset: 0; }
-        }
-        
-        @keyframes raysFadeOut {
-          from { opacity: 1; stroke-dashoffset: 0; }
-          to { opacity: 0; stroke-dashoffset: 20; }
-        }
-        
-        @keyframes moonToSun {
-          from { d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50'); }
-          to { d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50'); }
-        }
-        
-        @keyframes sunToMoon {
-          from { d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50'); }
-          to { d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50'); }
-        }
-        
-        /* Dark mode (moon) styles */
-        .dark .sun { display: none; }
-        .dark .moon { display: block; }
-        .dark .rays { opacity: 0; }
-        
-        /* Light mode (sun) styles */
-        .light .moon { display: none; }
-        .light .sun { display: block; }
-        .light .rays { opacity: 1; }
-        
-        /* Animation classes */
-        .to-light .moon-path {
-          animation: moonToSun 0.5s forwards ease-in-out;
-        }
-        .to-dark .sun-path {
-          animation: sunToMoon 0.5s forwards ease-in-out;
-        }
-        .to-light .rays {
-          animation: raysFadeIn 0.5s forwards ease-in-out;
-        }
-        .to-dark .rays {
-          animation: raysFadeOut 0.5s forwards ease-in-out;
-        }
-      </style>
-      
       <g class="sun-moon dark" id="toggleIcon">
         <!-- Moon shape -->
         <path class="moon moon-path" d="M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50" />
@@ -102,29 +50,27 @@
     </div>
 
   <div class="columns">
-    <aside class="window sidebar">
-        <div class="title-bar">links</div>
-        <div class="content">
-          <a href="https://jaidenschembri.github.io/desktop-1/" target="_blank">JaidenOS</a><br>
-          <a href="https://jaidenschembri.github.io/cli-chat/" target="_blank">CLI Chat</a><br>
-          <a href="https://github.com/jaidenschembri" target="_blank">GitHub</a><br>
-          <a href="https://x.com/jaiddog28" target="_blank">Twitter</a><br>
-          <a href="https://www.instagram.com/jaidenschembri/" target="_blank">Instagram</a><br>
-          <a href="mailto:jaidenschembri1@gmail.com">Email Me</a>
+    <aside class="window sidebar" role="complementary" aria-label="Navigation Links">
+        <div class="title-bar">
+            <h2 class="title-text">links</h2>
         </div>
+        <nav class="content">
+            <ul class="link-list">
+                <li><a href="https://jaidenschembri.github.io/desktop-1/" target="_blank" rel="noopener">JaidenOS</a></li>
+                <li><a href="https://jaidenschembri.github.io/cli-chat/" target="_blank" rel="noopener">CLI Chat</a></li>
+                <li><a href="https://github.com/jaidenschembri" target="_blank" rel="noopener">GitHub</a></li>
+                <li><a href="https://x.com/jaiddog28" target="_blank" rel="noopener">Twitter</a></li>
+                <li><a href="https://www.instagram.com/jaidenschembri/" target="_blank" rel="noopener">Instagram</a></li>
+                <li><a href="mailto:jaidenschembri1@gmail.com">Email Me</a></li>
+            </ul>
+        </nav>
     </aside>
       
     <div class="main-stack">
-        <main class="window main">
-          <div class="title-bar">about</div>
-          <div class="content">
-            <p>`✧･ﾟ:*✧･ﾟ:*graphics & code & ai*:･ﾟ✧*:･ﾟ✧`</p>
-          </div>   
-        </main>
-
-              <main class="window ascii">
-        <div class="content">
-          <pre>
+        <main class="window ascii" role="main">
+            <div class="content">
+                <figure class="ascii-art">
+                    <pre aria-label="ASCII Art Deer">
             ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡠⠴⠒⠒⠒⠒⠢⠤⢄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
             ⠀⠀⠀⠀⠀⠀⠀⣀⣀⣀⣠⠞⠁⠀⠚⠋⢀⣠⡤⠤⠤⢤⣟⠲⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀
             ⠀⠀⠀⠀⢀⡞⢩⡖⠛⡾⠁⠀⠀⠀⡠⠊⠁⠀⠀⢰⣶⣶⡄⠙⢮⡙⢗⡄⠀⠀⠀⠀⠀⠀
@@ -147,78 +93,49 @@
             ⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠈⡇⠀
             ⢸⠀⠀⠀⠀⢠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢳⠀
             ⠈⡆⠀⠀⠀⠀⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣴⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-          </pre>
-        </div>
-      </main>
-
-      <!-- <div id="winamp"></div> -->
-      
+                    </pre>
+                </figure>
+            </div>
+        </main>
     </div>
-      
-    <aside class="window sidebar rightbar">
-      <div class="title-bar">gallery</div>
-      <div class="content blinkies">
-        <img src="images/blinkies/crystalcastles.gif">
-        <img src="images/blinkies/smiths.gif">
-        <img src="images/blinkies/weakestsldier.gif">
-        <img src="images/blinkies/mayhem-1.webp">
-        <img src="images/blinkies/mayhem.webp">
-        <img src="images/blinkies/x49.gif">
-        <img src="images/blinkies/v75.gif">
-        <img src="images/blinkies/elliotsmith.gif">
-        <img src="images/blinkies/hands.gif">
-        <img src="images/blinkies/panchiko.webp">
-        <img src="images/blinkies/x11.gif">
-      </div>
-
-      <div class="content stickerboard">
-        <div class="stickers">
-          <img src="images/buttons/cat.gif">
-          <img src="images/buttons/nekojiru2.gif">
-          <img src="images/buttons/piano.gif">
-          <img src="images/buttons/japrainbow.gif">
-          <img src="images/buttons/apple.gif">
-          <img src="images/buttons/christnow.gif">
-          <img src="images/buttons/corp.gif">
-          <img src="images/buttons/hatsunemiku1.gif">
-          <img src="images/buttons/nekojiru2.gif">
-      </div>
-    </aside>
   </div>
 </div>
 
 <script src="script.js"></script>
 <script src="https://unpkg.com/webamp@latest/built/webamp.bundle.min.js"></script>
 
+<!-- Hidden Winamp Container -->
+<div id="winamp" style="display: none;"></div>
+
 <!-- Modal overlay for auth modal -->
 <div id="auth-modal-overlay" class="modal-overlay"></div>
 
 <!-- Sign In/Sign Up Modal -->
-<div id="auth-modal" class="window" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:200; max-width:400px; min-width:320px;">
-  <div class="title-bar" style="justify-content:space-between;">
+<div id="auth-modal" class="window">
+  <div class="title-bar">
     <span id="auth-modal-title">Sign In</span>
-    <button id="auth-modal-close" style="background:none; border:none; color:inherit; font-size:16px; cursor:pointer;">✕</button>
+    <button id="auth-modal-close">✕</button>
   </div>
-  <div class="content" style="height:370px; min-height:370px; display:flex; flex-direction:column; justify-content:center;">
-    <form id="loginForm" style="margin-top:16px; display:flex; flex-direction:column;">
+  <div class="content">
+    <form id="loginForm">
       <input type="text" id="loginUsername" required placeholder="Username">
       <input type="password" id="loginPassword" required placeholder="Password">
       <button type="submit" class="auth-text-btn">Sign In</button>
     </form>
-    <div id="show-register-link" style="margin-top:10px; font-size:13px; text-align:center;">
+    <div id="show-register-link">
       Don't have an account? <a href="#" id="show-register">Sign up</a>
     </div>
-    <form id="registerForm" style="margin-top:16px; display:none; flex-direction:column;">
+    <form id="registerForm">
       <input type="email" id="regEmail" required placeholder="Email">
       <input type="text" id="regUsername" required placeholder="Username">
       <input type="text" id="regInvite" required placeholder="Invite Code">
       <input type="password" id="regPassword" required placeholder="Password">
       <button type="submit" class="auth-text-btn">Sign Up</button>
     </form>
-    <div id="show-login-link" style="margin-top:10px; font-size:13px; text-align:center; display:none;">
+    <div id="show-login-link">
       Already have an account? <a href="#" id="show-login">Sign in</a>
     </div>
-    <div id="auth-response" style="margin-top:16px; min-height:24px; font-size:13px; white-space:pre-wrap;"></div>
+    <div id="auth-response"></div>
   </div>
 </div>
 

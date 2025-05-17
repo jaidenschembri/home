@@ -1,0 +1,67 @@
+/* === MOBILE VARIABLES === */
+:root {
+  --mobile-breakpoint-tablet: 1000px;
+  --mobile-breakpoint-phone: 600px;
+  --mobile-breakpoint-small: 400px;
+  --mobile-body-padding-tablet: 10px 0;
+  --mobile-body-padding-phone: 5px 0;
+  --mobile-page-width-tablet: 98%;
+  --mobile-page-padding-top-tablet: 40px;
+  --mobile-page-padding-top-phone: 30px;
+  --mobile-content-padding-phone: 8px;
+}
+
+/* === MOBILE STYLES === */
+
+/* Small tablets and large phones */
+@media screen and (max-width: 1000px) {
+  body {
+    min-width: auto;
+    padding: var(--mobile-body-padding-tablet);
+  }
+  
+  .page {
+    width: var(--mobile-page-width-tablet);
+    padding-top: var(--mobile-page-padding-top-tablet);
+  }
+  
+  #winamp {
+    margin-top: 40px;
+    align-self: center;
+  }
+}
+
+/* Phones */
+@media screen and (max-width: 600px) {
+  body {
+    padding: var(--mobile-body-padding-phone);
+  }
+  
+  .page {
+    padding-top: var(--mobile-page-padding-top-phone);
+  }
+  
+  .content {
+    padding: var(--mobile-content-padding-phone);
+  }
+}
+
+/* Very small phones */
+@media screen and (max-width: 400px) {
+  .page {
+    width: 100%;
+    padding-top: 25px;
+  }
+  
+  .window {
+    margin: 5px 0;
+  }
+  
+  .title-bar {
+    padding: 0 5px;
+  }
+  
+  .content {
+    padding: 5px;
+  }
+} 
