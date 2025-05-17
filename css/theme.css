@@ -83,6 +83,10 @@ body.light-theme .title-bar {
   color: var(--color-fg);
 }
 
+body.light-theme .signin-title-bar {
+  border-bottom: none;
+}
+
 body.light-theme .content {
   color: var(--color-fg);
 }
@@ -113,6 +117,10 @@ body.light-theme #toggleIcon .rays {
 }
 
 body.light-theme .signin-btn {
+  color: var(--color-fg);
+}
+
+body.light-theme .signed-in-text {
   color: var(--color-fg);
 }
 

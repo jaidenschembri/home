@@ -140,6 +140,72 @@ function initAuthModal() {
     const responseDiv = document.getElementById('auth-response');
     const showLoginLink = document.getElementById('show-login-link');
     const showLoginAnchor = document.getElementById('show-login');
+    const signedInText = document.querySelector('.signed-in-text');
+    const usernameSpan = document.querySelector('.signed-in-text .username');
+
+    // Check if the user is already logged in
+    function checkAuthStatus() {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            // Validate token and get user info
+            fetch(`${API_URL}/api/validate`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                mode: 'cors'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid && data.user) {
+                    // Show signed in text with username
+                    showSignedInState(data.user.username);
+                } else {
+                    // Token is invalid, remove it
+                    localStorage.removeItem('authToken');
+                    showSignedOutState();
+                }
+            })
+            .catch(error => {
+                console.error('Error validating token:', error);
+                localStorage.removeItem('authToken');
+                showSignedOutState();
+            });
+        } else {
+            showSignedOutState();
+        }
+    }
+
+    // Show signed in state
+    function showSignedInState(username) {
+        if (openBtn) openBtn.style.display = 'none';
+        if (signedInText) {
+            signedInText.style.display = 'block';
+            if (usernameSpan) usernameSpan.textContent = username;
+        }
+    }
+
+    // Show signed out state
+    function showSignedOutState() {
+        if (openBtn) openBtn.style.display = 'block';
+        if (signedInText) signedInText.style.display = 'none';
+    }
+    
+    // Logout function
+    function logout() {
+        localStorage.removeItem('authToken');
+        showSignedOutState();
+    }
+    
+    // Add logout event listener to signed-in text
+    if (signedInText) {
+        signedInText.addEventListener('click', () => {
+            if (confirm('Are you sure you want to log out?')) {
+                logout();
+            }
+        });
+    }
 
     function showModal() {
         modal.style.display = 'block';
@@ -248,6 +314,9 @@ function initAuthModal() {
                 responseDiv.className = 'auth-success';
                 responseDiv.textContent = `Welcome, ${data.user.username}!`;
                 
+                // Update UI to show signed in state
+                showSignedInState(data.user.username);
+                
                 // Fade out and hide modal
                 setTimeout(() => {
                     const fadeEffect = setInterval(() => {
@@ -273,4 +342,7 @@ function initAuthModal() {
             responseDiv.textContent = `Error: ${error.message}`;
         }
     });
+    
+    // Check authentication status on init
+    checkAuthStatus();
 }

@@ -1,0 +1,141 @@
+/* Forum page specific styles */
+
+/* Forum container */
+.forum-container {
+  margin-top: 20px;
+  max-width: 800px;
+  width: 100%;
+}
+
+/* Post form */
+.post-form-container {
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--base-border);
+  padding-bottom: 20px;
+}
+
+#postForm {
+  display: flex;
+  flex-direction: column;
+}
+
+#postContent {
+  width: 100%;
+  min-height: 100px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--base-border);
+  color: var(--base-fg);
+  font-family: var(--base-font);
+  padding: 10px;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+
+.post-btn {
+  align-self: flex-end;
+  background: none;
+  border: 1px solid var(--base-border);
+  color: var(--base-fg);
+  padding: 5px 15px;
+  cursor: pointer;
+  font-family: var(--base-font);
+  transition: all 0.2s ease;
+}
+
+.post-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.post-response {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.post-response.error {
+  color: #ff6b6b;
+}
+
+.post-response.success {
+  color: #51cf66;
+}
+
+/* Posts list */
+.posts-list {
+  width: 100%;
+}
+
+.post {
+  border: 1px solid var(--base-border);
+  margin-bottom: 15px;
+  padding: 0;
+  font-size: 14px;
+}
+
+.post-header {
+  background: rgba(0,0,0,0.2);
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  border-bottom: 1px solid var(--base-border);
+}
+
+.post-username {
+  font-weight: bold;
+}
+
+.post-timestamp {
+  color: rgba(255,255,255,0.7);
+}
+
+.post-content {
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Loading message */
+.loading-message {
+  text-align: center;
+  margin: 20px 0;
+  font-style: italic;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  margin: 20px 0;
+  font-style: italic;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Navigation */
+.nav-link {
+  color: var(--header-fg);
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Light theme adjustments */
+body.light-theme .post-content {
+  color: var(--base-fg);
+}
+
+body.light-theme #postContent {
+  background: rgba(0,0,0,0.05);
+}
+
+body.light-theme .post-header {
+  background: rgba(0,0,0,0.05);
+}
+
+body.light-theme .post-timestamp {
+  color: rgba(0,0,0,0.7);
+}
+
+body.light-theme .loading-message,
+body.light-theme .empty-state {
+  color: rgba(0,0,0,0.7);
+} 
