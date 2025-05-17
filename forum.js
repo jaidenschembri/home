@@ -15,6 +15,8 @@ function initForum() {
     const forumContainer = document.querySelector('.forum-container');
     const authModal = document.getElementById('auth-modal');
     const authOverlay = document.getElementById('auth-modal-overlay');
+    const togglePostFormBtn = document.getElementById('toggle-post-form');
+    const postFormWindow = document.querySelector('.post-form-window');
     
     // Debug elements
     const apiStatus = document.getElementById('api-status');
@@ -25,6 +27,14 @@ function initForum() {
     let postsCache = [];
     // Admin mode flag
     let adminMode = false;
+    
+    // Toggle post form visibility
+    if (togglePostFormBtn && postFormWindow) {
+        togglePostFormBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            postFormWindow.style.display = postFormWindow.style.display === 'none' ? 'block' : 'none';
+        });
+    }
     
     // Debug tool initialization
     if (checkApiBtn) {
@@ -198,11 +208,7 @@ function initForum() {
                     if (existingSignInBtn) {
                         existingSignInBtn.click();
                     } else {
-                        // Fallback if button not found
-                        console.log("Sign in button not found, showing alert");
-                        if (confirm("Please sign in to continue. Reload the page?")) {
-                            window.location.reload();
-                        }
+                        console.error('Signin button not found');
                     }
                 });
             }
@@ -211,49 +217,63 @@ function initForum() {
     
     // Function to show forum content
     function showForumContent() {
-        console.log("Showing forum content");
-        // Update just the posts container, leave the form container as is
         if (forumContainer) {
             const content = forumContainer.querySelector('.content');
             if (content) {
-                // Check if user is admin
-                const isAdmin = localStorage.getItem('username') === 'admin';
+                // Get the navigation and post form if they exist
+                const navLinks = content.querySelector('.navigation-links');
+                const postFormContainer = content.querySelector('.post-form-window');
                 
-                // Only show admin panel for admin users
-                const adminPanel = isAdmin ? 
-                    `<div class="admin-panel">
-                        <h4>Admin Controls</h4>
-                        <button id="admin-mode" class="admin-btn">Admin Mode</button>
-                        <button id="purge-posts" class="admin-btn">Purge All Posts</button>
-                    </div>` : '';
+                // Clear the content while preserving navigation and post form
+                if (navLinks && postFormContainer) {
+                    content.innerHTML = '';
+                    content.appendChild(navLinks);
+                    content.appendChild(postFormContainer);
+                    content.innerHTML += `
+                        <div id="postsList" class="posts-list">
+                            <div class="loading-message">Loading posts...</div>
+                        </div>
+                    `;
+                } else {
+                    // If navigation and post form don't exist, just add the posts list
+                    content.innerHTML = `
+                        <div class="navigation-links">
+                            [<a href="index.html">back</a>] [<a href="forum.html">refresh</a>] [<a href="#" id="toggle-post-form">new post</a>]
+                        </div>
+                        <div class="post-form-window" style="display: none;">
+                            <div class="content">
+                                <div class="post-form-container">
+                                    <form id="postForm">
+                                        <input type="text" id="threadSubject" placeholder="Subject (optional)" maxlength="100">
+                                        <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
+                                        <button type="submit" class="post-btn">Submit Post</button>
+                                        <div id="post-response" class="post-response"></div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="postsList" class="posts-list">
+                            <div class="loading-message">Loading posts...</div>
+                        </div>
+                    `;
+                }
                 
-                content.innerHTML = `
-                    ${adminPanel}
-                    <!-- Posts container -->
-                    <div id="postsList" class="threads-list">
-                        <!-- Threads will be loaded here -->
-                        <div class="loading-message">Loading threads...</div>
-                    </div>
-                `;
+                // Refresh elements after DOM update
+                reinitializeElements();
                 
-                // Initialize admin panel buttons only for admin users
-                if (isAdmin) {
-                    const adminModeBtn = document.getElementById('admin-mode');
-                    const purgePostsBtn = document.getElementById('purge-posts');
-                    
-                    if (adminModeBtn) {
-                        adminModeBtn.addEventListener('click', toggleAdminMode);
-                    }
-                    
-                    if (purgePostsBtn) {
-                        purgePostsBtn.addEventListener('click', confirmPurgeAllPosts);
-                    }
+                // Add toggle functionality to the new button
+                const toggleBtn = document.getElementById('toggle-post-form');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const postFormWindow = document.querySelector('.post-form-window');
+                        if (postFormWindow) {
+                            postFormWindow.style.display = postFormWindow.style.display === 'none' ? 'block' : 'none';
+                        }
+                    });
                 }
             }
         }
-        
-        // Re-initialize elements after recreating them
-        reinitializeElements();
     }
     
     // Re-initialize elements after DOM changes
@@ -547,73 +567,51 @@ function initForum() {
         // Create thread element
         const threadElement = document.createElement('div');
         threadElement.className = 'thread';
-        threadElement.dataset.threadId = thread.id;
+        threadElement.setAttribute('id', `thread-${thread.id}`);
         
-        // Format date
-        const threadDate = new Date(thread.timestamp);
-        const formattedDate = threadDate.toLocaleString();
+        // Format timestamp
+        const date = new Date(thread.timestamp);
+        const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
         
-        // Build subject HTML
-        const subjectHtml = thread.subject ? 
-            `<span class="thread-subject">${escapeHTML(thread.subject)}</span>` : '';
+        // Process thread content for greentext
+        const processedContent = processGreentextAndLinks(thread.content);
         
-        // Admin controls - only for admin mode, no user delete buttons
-        const isAdmin = localStorage.getItem('username') === 'admin';
-        const adminControls = isAdmin && adminMode ? 
-            `<div class="thread-admin-controls">
-                <button class="delete-thread-btn" data-thread-id="${thread.id}">Delete</button>
-            </div>` : '';
+        // Check if content includes an image URL
+        const imageHtml = extractImageHtml(thread.content);
         
-        // Set thread HTML
+        // Create thread HTML
         threadElement.innerHTML = `
-            <div class="thread-post">
-                <div class="post-header">
-                    <div class="post-info">
-                        <span class="post-username">${escapeHTML(thread.username)}</span>
-                        <span class="post-id">No.${thread.id}</span>
-                        ${subjectHtml}
-                    </div>
-                    <span class="post-timestamp">${formattedDate}</span>
+            <div class="post-header">
+                <span class="post-username">${escapeHTML(thread.username)}</span>
+                <span class="post-timestamp">${formattedDate}</span>
+                ${thread.subject ? `<span class="thread-subject">${escapeHTML(thread.subject)}</span>` : ''}
+                <span class="post-id">No.${thread.id}</span>
+                ${adminMode ? `<button class="delete-thread-btn" data-thread-id="${thread.id}">Delete</button>` : ''}
+            </div>
+            <div class="post-content">
+                ${imageHtml}${processedContent}
+            </div>
+            ${thread.replies && thread.replies.length > 0 ? `
+                <div class="replies-container">
+                    ${thread.replies.map(reply => generateReplyHtml(reply)).join('')}
                 </div>
-                <div class="post-content">${escapeHTML(thread.content)}</div>
-                ${adminControls}
-            </div>
-            
-            <div class="reply-form-container">
-                <form class="reply-form" data-thread-id="${thread.id}">
-                    <textarea class="reply-content" placeholder="Write a reply..." required></textarea>
-                    <button type="submit" class="reply-btn">Reply</button>
-                    <div class="reply-response post-response"></div>
-                </form>
-            </div>
-            
-            <div class="replies-container" data-thread-id="${thread.id}">
-                ${thread.replies && thread.replies.length > 0 ? 
-                    `<div class="replies-header">${thread.replies.length} ${thread.replies.length === 1 ? 'Reply' : 'Replies'}</div>` : 
-                    '<div class="replies-header no-replies">No Replies Yet</div>'}
-                ${thread.replies && thread.replies.length > 0 ? 
-                    thread.replies.map(reply => generateReplyHtml(reply)).join('') : ''}
-            </div>
+            ` : ''}
         `;
         
-        // Add to the beginning of the list
-        if (postsList.firstChild) {
-            postsList.insertBefore(threadElement, postsList.firstChild);
-        } else {
-            postsList.appendChild(threadElement);
+        // Add admin controls if admin mode is enabled
+        if (adminMode) {
+            const deleteBtn = threadElement.querySelector('.delete-thread-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to delete this thread?')) {
+                        deleteThread(thread.id);
+                    }
+                });
+            }
         }
         
-        // Add event listener to the reply form
-        const replyForm = threadElement.querySelector('.reply-form');
-        if (replyForm) {
-            replyForm.addEventListener('submit', handleReplySubmission);
-        }
-        
-        // Add event listener to delete button if present (admin only)
-        const deleteBtn = threadElement.querySelector('.delete-thread-btn');
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => deleteThread(thread.id));
-        }
+        // Add thread to list
+        postsList.appendChild(threadElement);
     }
     
     // Function to delete a thread (admin only)
@@ -692,22 +690,60 @@ function initForum() {
         }
     }
     
+    // Process text for greentext (lines starting with >) and links
+    function processGreentextAndLinks(text) {
+        if (!text) return '';
+        
+        // Escape HTML first
+        let processed = escapeHTML(text);
+        
+        // Process greentext (lines starting with >)
+        processed = processed.replace(/^(&gt;.*)$/gm, '<span class="greentext">$1</span>');
+        
+        // Replace URLs with links
+        processed = processed.replace(
+            /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g, 
+            '<a href="$1" target="_blank">$1</a>'
+        );
+        
+        return processed;
+    }
+    
+    // Extract image URL from content if it exists
+    function extractImageHtml(content) {
+        if (!content) return '';
+        
+        // Find image URL in content (basic pattern matching)
+        const imgMatch = content.match(/(https?:\/\/.*?\.(?:png|jpg|jpeg|gif|webp))/i);
+        if (imgMatch) {
+            return `<img src="${escapeHTML(imgMatch[0])}" class="post-image" onclick="window.open(this.src, '_blank')">`;
+        }
+        
+        return '';
+    }
+
     // Generate HTML for a reply
     function generateReplyHtml(reply) {
-        // Format date
-        const replyDate = new Date(reply.timestamp);
-        const formattedDate = replyDate.toLocaleString();
+        // Format timestamp
+        const date = new Date(reply.timestamp);
+        const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+        
+        // Process reply content for greentext
+        const processedContent = processGreentextAndLinks(reply.content);
+        
+        // Check if reply includes an image URL
+        const imageHtml = extractImageHtml(reply.content);
         
         return `
-            <div class="reply" data-reply-id="${reply.id}">
+            <div class="reply" id="reply-${reply.id}">
                 <div class="post-header">
-                    <div class="post-info">
-                        <span class="post-username">${escapeHTML(reply.username)}</span>
-                        <span class="post-id">No.${reply.id}</span>
-                    </div>
+                    <span class="post-username">${escapeHTML(reply.username)}</span>
                     <span class="post-timestamp">${formattedDate}</span>
+                    <span class="post-id">No.${reply.id}</span>
                 </div>
-                <div class="post-content">${escapeHTML(reply.content)}</div>
+                <div class="post-content">
+                    ${imageHtml}${processedContent}
+                </div>
             </div>
         `;
     }
@@ -737,13 +773,12 @@ function initForum() {
     
     // Escape HTML to prevent XSS
     function escapeHTML(str) {
-        if (!str) return '';
         return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
     
     // Function to confirm and purge all posts (admin only)

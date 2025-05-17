@@ -17,7 +17,7 @@
   <div class="page">
     <header class="header-window">
       <div class="title-bar">
-        <span class="title-text">forum</span>
+        <span class="title-text">Forum</span>
         <div id="theme-toggle" title="Toggle Theme">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20">
             <g class="sun-moon dark" id="toggleIcon">
@@ -44,35 +44,33 @@
       </div>
     </header>
 
-    <div class="columns">
-      <!-- Post Form Container -->
-      <div class="window post-form-window">
-        <div class="title-bar">
-          <span class="title-text">create post</span>
-        </div>
-        <div class="content">
-          <div class="post-form-container">
-            <form id="postForm">
-              <input type="text" id="threadSubject" placeholder="Subject (optional)" maxlength="100">
-              <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
-              <button type="submit" class="post-btn">Submit Post</button>
-              <div id="post-response" class="post-response"></div>
-            </form>
-          </div>
-        </div>
+    <div class="window forum-container">
+      <div class="title-bar">
+        <span class="title-text">Forum</span>
       </div>
-      
-      <!-- Posts Container -->
-      <div class="window forum-container">
-        <div class="title-bar">
-          <span class="title-text">posts</span>
+      <div class="content">
+        <div class="navigation-links">
+          [<a href="index.html">back</a>] [<a href="forum.html">refresh</a>] [<a href="#" id="toggle-post-form">new post</a>]
         </div>
-        <div class="content">
-          <!-- Posts container -->
-          <div id="postsList" class="posts-list">
-            <!-- Posts will be loaded here -->
-            <div class="loading-message">Loading posts...</div>
+
+        <!-- Post Form Container (hidden by default) -->
+        <div class="post-form-window" style="display: none;">
+          <div class="content">
+            <div class="post-form-container">
+              <form id="postForm">
+                <input type="text" id="threadSubject" placeholder="Subject (optional)" maxlength="100">
+                <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
+                <button type="submit" class="post-btn">Submit Post</button>
+                <div id="post-response" class="post-response"></div>
+              </form>
+            </div>
           </div>
+        </div>
+        
+        <!-- Posts container -->
+        <div id="postsList" class="posts-list">
+          <!-- Posts will be loaded here -->
+          <div class="loading-message">Loading posts...</div>
         </div>
       </div>
     </div>
