@@ -45,26 +45,33 @@
     </header>
 
     <div class="columns">
-      <div class="main-stack">
-        <div class="window forum-container">
-          <div class="title-bar">
-            <span class="title-text">posts</span>
+      <!-- Post Form Container -->
+      <div class="window post-form-window">
+        <div class="title-bar">
+          <span class="title-text">create post</span>
+        </div>
+        <div class="content">
+          <div class="post-form-container">
+            <form id="postForm">
+              <input type="text" id="threadSubject" placeholder="Subject (optional)" maxlength="100">
+              <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
+              <button type="submit" class="post-btn">Submit Post</button>
+              <div id="post-response" class="post-response"></div>
+            </form>
           </div>
-          <div class="content">
-            <!-- Post submission form -->
-            <div class="post-form-container">
-              <form id="postForm">
-                <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
-                <button type="submit" class="post-btn">Submit Post</button>
-                <div id="post-response" class="post-response"></div>
-              </form>
-            </div>
-
-            <!-- Posts container -->
-            <div id="postsList" class="posts-list">
-              <!-- Posts will be loaded here -->
-              <div class="loading-message">Loading posts...</div>
-            </div>
+        </div>
+      </div>
+      
+      <!-- Posts Container -->
+      <div class="window forum-container">
+        <div class="title-bar">
+          <span class="title-text">posts</span>
+        </div>
+        <div class="content">
+          <!-- Posts container -->
+          <div id="postsList" class="posts-list">
+            <!-- Posts will be loaded here -->
+            <div class="loading-message">Loading posts...</div>
           </div>
         </div>
       </div>

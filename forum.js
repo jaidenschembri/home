@@ -13,6 +13,9 @@ function initForum() {
     const forumContainer = document.querySelector('.forum-container');
     const authModal = document.getElementById('auth-modal');
     const authOverlay = document.getElementById('auth-modal-overlay');
+    
+    // Local cache for posts - will be synced with API
+    let postsCache = [];
 
     // Check authentication on page load
     checkAuthentication();
@@ -104,37 +107,25 @@ function initForum() {
         }
     }
     
-    // Function to show auth modal (REMOVED - using existing functionality)
-    
     // Function to show forum content
     function showForumContent() {
         console.log("Showing forum content");
+        // Update just the posts container, leave the form container as is
         if (forumContainer) {
             const content = forumContainer.querySelector('.content');
             if (content) {
                 content.innerHTML = `
-                    <!-- Thread submission form -->
-                    <div class="thread-form-container">
-                        <div class="thread-form-header">Create New Thread</div>
-                        <form id="postForm">
-                            <input type="text" id="threadSubject" placeholder="Subject (optional)" maxlength="100">
-                            <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
-                            <button type="submit" class="post-btn">Create Thread</button>
-                            <div id="post-response" class="post-response"></div>
-                        </form>
-                    </div>
-
                     <!-- Posts container -->
                     <div id="postsList" class="threads-list">
                         <!-- Threads will be loaded here -->
                         <div class="loading-message">Loading threads...</div>
                     </div>
                 `;
-                
-                // Re-initialize elements after recreating them
-                reinitializeElements();
             }
         }
+        
+        // Re-initialize elements after recreating them
+        reinitializeElements();
     }
     
     // Re-initialize elements after DOM changes
@@ -203,8 +194,9 @@ function initForum() {
                 postResponse.textContent = "Thread created successfully!";
                 postResponse.className = "post-response success";
                 
-                // Add the new thread to the list
+                // Add the new thread to the list and cache
                 addThreadToList(data.thread);
+                postsCache.unshift(data.thread);
                 
                 // Clear success message after 3 seconds
                 setTimeout(() => {
@@ -271,6 +263,15 @@ function initForum() {
                 const repliesContainer = document.querySelector(`.replies-container[data-thread-id="${threadId}"]`);
                 if (repliesContainer) {
                     addReplyToThread(repliesContainer, data.reply);
+                    
+                    // Update the post in the cache
+                    const postIndex = postsCache.findIndex(post => post.id == threadId);
+                    if (postIndex !== -1) {
+                        if (!postsCache[postIndex].replies) {
+                            postsCache[postIndex].replies = [];
+                        }
+                        postsCache[postIndex].replies.push(data.reply);
+                    }
                 }
                 
                 // Clear success message after 3 seconds
@@ -330,6 +331,9 @@ function initForum() {
                     return new Date(b.timestamp) - new Date(a.timestamp);
                 });
                 
+                // Update cache
+                postsCache = sortedPosts;
+                
                 // Add each post to the list
                 sortedPosts.forEach(post => {
                     addThreadToList(post);
@@ -345,6 +349,28 @@ function initForum() {
             }
         }
     }
+    
+    // Periodically refresh posts to keep them current
+    function setupPostRefresh() {
+        // Refresh posts every 1 minute
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                console.log('Refreshing posts...');
+                loadPosts();
+            }
+        }, 60000); // 1 minute
+        
+        // Also refresh when the page becomes visible again
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                console.log('Page visible, refreshing posts...');
+                loadPosts();
+            }
+        });
+    }
+    
+    // Call setup refresh function
+    setupPostRefresh();
 
     // Function to add a thread to the list
     function addThreadToList(thread) {
