@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Main forum initialization function
 function initForum() {
     const API_URL = 'https://still-wood-forum-v2.jaidenschembri1.workers.dev';
+    console.log('Using API endpoint:', API_URL);
+    
     let postForm = document.getElementById('postForm');
     let postContent = document.getElementById('postContent');
     let postResponse = document.getElementById('post-response');
@@ -17,33 +19,36 @@ function initForum() {
     // Debug elements
     const apiStatus = document.getElementById('api-status');
     const checkApiBtn = document.getElementById('check-api');
-    const toggleStorageBtn = document.getElementById('toggle-storage');
-    const storageMode = document.getElementById('storage-mode');
+    const adminModeBtn = document.getElementById('admin-mode');
     
     // Local cache for posts - will be synced with API
     let postsCache = [];
-    
-    // Flag to use localStorage as a fallback (for debugging)
-    let USE_LOCAL_STORAGE_FALLBACK = true;
+    // Admin mode flag
+    let adminMode = false;
     
     // Debug tool initialization
     if (checkApiBtn) {
         checkApiBtn.addEventListener('click', checkApiConnection);
     }
     
-    if (toggleStorageBtn) {
-        toggleStorageBtn.addEventListener('click', toggleStorageMode);
+    // Initialize admin mode button if it exists
+    if (adminModeBtn) {
+        adminModeBtn.addEventListener('click', toggleAdminMode);
     }
     
-    // Function to toggle between API-only and localStorage fallback
-    function toggleStorageMode() {
-        USE_LOCAL_STORAGE_FALLBACK = !USE_LOCAL_STORAGE_FALLBACK;
-        if (storageMode) {
-            storageMode.textContent = USE_LOCAL_STORAGE_FALLBACK ? 
-                'API with localStorage fallback' : 'API only (no fallback)';
+    // Function to toggle admin mode
+    function toggleAdminMode() {
+        adminMode = !adminMode;
+        
+        if (adminModeBtn) {
+            adminModeBtn.textContent = adminMode ? 'Exit Admin Mode' : 'Admin Mode';
+            adminModeBtn.classList.toggle('active', adminMode);
         }
-        console.log('Storage mode changed:', USE_LOCAL_STORAGE_FALLBACK ? 
-            'API with localStorage fallback' : 'API only');
+        
+        console.log('Admin mode:', adminMode ? 'enabled' : 'disabled');
+        
+        // Refresh the post list to update admin controls
+        loadPosts();
     }
     
     // Function to check API connection
@@ -98,31 +103,6 @@ function initForum() {
     
     // Check API connection on load
     checkApiConnection();
-    
-    // Function to save posts to localStorage (fallback mechanism)
-    function savePostsToLocalStorage() {
-        if (USE_LOCAL_STORAGE_FALLBACK) {
-            localStorage.setItem('forum_posts', JSON.stringify(postsCache));
-            console.log('Saved posts to localStorage as fallback:', postsCache.length);
-        }
-    }
-    
-    // Function to load posts from localStorage (fallback mechanism)
-    function getPostsFromLocalStorage() {
-        if (USE_LOCAL_STORAGE_FALLBACK) {
-            const savedPosts = localStorage.getItem('forum_posts');
-            if (savedPosts) {
-                try {
-                    const parsedPosts = JSON.parse(savedPosts);
-                    console.log('Loaded posts from localStorage fallback:', parsedPosts.length);
-                    return parsedPosts;
-                } catch (e) {
-                    console.error('Error parsing saved posts:', e);
-                }
-            }
-        }
-        return [];
-    }
 
     // Check authentication on page load
     checkAuthentication();
@@ -132,6 +112,10 @@ function initForum() {
         console.log("Checking authentication status");
         const token = localStorage.getItem('authToken');
         console.log("Token exists:", !!token);
+        if (token) {
+            // Log the first few characters of the token for debugging
+            console.log("Token format check:", token.substring(0, 10) + "...");
+        }
         
         if (!token) {
             // User is not authenticated - hide forum content and show login prompt
@@ -165,6 +149,12 @@ function initForum() {
         .then(data => {
             console.log("API validation response:", data);
             if (data.valid && data.user) {
+                // Store username in localStorage for post ownership
+                if (data.user.username) {
+                    localStorage.setItem('username', data.user.username);
+                    console.log("Username stored:", data.user.username);
+                }
+                
                 // User is authenticated - show forum content
                 showForumContent();
                 // Load posts
@@ -172,15 +162,20 @@ function initForum() {
             } else {
                 // Token is invalid - hide forum content and show login prompt
                 localStorage.removeItem('authToken');
+                localStorage.removeItem('username');
                 showLoginPrompt();
             }
         })
         .catch(error => {
             console.error('Error validating token:', error);
-            // Don't remove the token on network errors, just try to load content
-            // if the token exists, since the user might be offline
-            showForumContent();
-            loadPosts();
+            // On network errors, show error message
+            if (forumContainer) {
+                forumContainer.querySelector('.content').innerHTML = `
+                    <div class="error-message">
+                        <p>Error connecting to server. Please try again later.</p>
+                    </div>
+                `;
+            }
         });
     }
 
@@ -221,13 +216,39 @@ function initForum() {
         if (forumContainer) {
             const content = forumContainer.querySelector('.content');
             if (content) {
+                // Check if user is admin
+                const isAdmin = localStorage.getItem('username') === 'admin';
+                
+                // Only show admin panel for admin users
+                const adminPanel = isAdmin ? 
+                    `<div class="admin-panel">
+                        <h4>Admin Controls</h4>
+                        <button id="admin-mode" class="admin-btn">Admin Mode</button>
+                        <button id="purge-posts" class="admin-btn">Purge All Posts</button>
+                    </div>` : '';
+                
                 content.innerHTML = `
+                    ${adminPanel}
                     <!-- Posts container -->
                     <div id="postsList" class="threads-list">
                         <!-- Threads will be loaded here -->
                         <div class="loading-message">Loading threads...</div>
                     </div>
                 `;
+                
+                // Initialize admin panel buttons only for admin users
+                if (isAdmin) {
+                    const adminModeBtn = document.getElementById('admin-mode');
+                    const purgePostsBtn = document.getElementById('purge-posts');
+                    
+                    if (adminModeBtn) {
+                        adminModeBtn.addEventListener('click', toggleAdminMode);
+                    }
+                    
+                    if (purgePostsBtn) {
+                        purgePostsBtn.addEventListener('click', confirmPurgeAllPosts);
+                    }
+                }
             }
         }
         
@@ -255,8 +276,7 @@ function initForum() {
         if (updatedPostResponse) postResponse = updatedPostResponse;
         if (updatedPostsList) postsList = updatedPostsList;
     }
-
-    // Event listener for thread submission
+    
     async function handleThreadSubmission(e) {
         e.preventDefault();
         
@@ -293,100 +313,60 @@ function initForum() {
                 body: JSON.stringify({ subject, content })
             });
             
-            const data = await response.json();
-            console.log('API response for post creation:', data, 'Status:', response.status);
+            console.log('Raw API response:', response);
+            const responseClone = response.clone();
             
-            if (response.ok) {
-                // Clear form and show success message
-                postContent.value = '';
-                document.getElementById('threadSubject').value = '';
-                postResponse.textContent = "Thread created successfully!";
-                postResponse.className = "post-response success";
+            try {
+                const data = await response.json();
+                console.log('API response for post creation:', data, 'Status:', response.status);
                 
-                // Add the new thread to the list and cache
-                const newThread = data.thread || {
-                    id: Date.now(),
-                    username: 'You',
-                    subject: subject,
-                    content: content,
-                    timestamp: new Date().toISOString(),
-                    replies: []
-                };
-                
-                addThreadToList(newThread);
-                postsCache.unshift(newThread);
-                
-                // Save to localStorage as fallback
-                savePostsToLocalStorage();
-                
-                // Clear success message after 3 seconds
-                setTimeout(() => {
-                    postResponse.textContent = "";
-                    postResponse.className = "post-response";
-                }, 3000);
-            } else {
-                // Try the localStorage fallback if API fails
-                if (USE_LOCAL_STORAGE_FALLBACK) {
-                    console.log('API failed, using localStorage fallback');
-                    const newThread = {
-                        id: Date.now(),
-                        username: 'You (Offline)',
+                if (response.ok) {
+                    // Clear form and show success message
+                    postContent.value = '';
+                    document.getElementById('threadSubject').value = '';
+                    postResponse.textContent = "Thread created successfully!";
+                    postResponse.className = "post-response success";
+                    
+                    // Add the new thread to the list and cache
+                    const newThread = data.thread || {
+                        id: Date.now().toString(),
+                        username: 'You',
                         subject: subject,
                         content: content,
                         timestamp: new Date().toISOString(),
                         replies: []
                     };
                     
+                    console.log('Thread being added to UI:', newThread);
                     addThreadToList(newThread);
                     postsCache.unshift(newThread);
-                    savePostsToLocalStorage();
                     
-                    postContent.value = '';
-                    document.getElementById('threadSubject').value = '';
-                    postResponse.textContent = "Thread created in offline mode";
-                    postResponse.className = "post-response success";
-                    
+                    // Clear success message after 3 seconds
                     setTimeout(() => {
                         postResponse.textContent = "";
                         postResponse.className = "post-response";
                     }, 3000);
+                    
+                    // Reload posts after a short delay to confirm thread was saved
+                    setTimeout(() => {
+                        loadPosts();
+                    }, 1000);
                 } else {
+                    console.error('API error response:', data);
                     postResponse.textContent = data.error || "Failed to create thread. Please try again.";
                     postResponse.className = "post-response error";
                 }
+            } catch (jsonError) {
+                console.error('Error parsing API response:', jsonError);
+                const rawText = await responseClone.text();
+                console.log('Raw response text:', rawText);
+                postResponse.textContent = `Error: Could not parse server response`;
+                postResponse.className = "post-response error";
             }
         } catch (error) {
             console.error('Error creating thread:', error);
-            
-            // Try the localStorage fallback if API fails
-            if (USE_LOCAL_STORAGE_FALLBACK) {
-                console.log('API error, using localStorage fallback');
-                const newThread = {
-                    id: Date.now(),
-                    username: 'You (Offline)',
-                    subject: subject,
-                    content: content,
-                    timestamp: new Date().toISOString(),
-                    replies: []
-                };
-                
-                addThreadToList(newThread);
-                postsCache.unshift(newThread);
-                savePostsToLocalStorage();
-                
-                postContent.value = '';
-                document.getElementById('threadSubject').value = '';
-                postResponse.textContent = "Thread created in offline mode";
-                postResponse.className = "post-response success";
-                
-                setTimeout(() => {
-                    postResponse.textContent = "";
-                    postResponse.className = "post-response";
-                }, 3000);
-            } else {
-                postResponse.textContent = `Error: ${error.message}`;
-                postResponse.className = "post-response error";
-            }
+            postResponse.textContent = `Error: ${error.message}`;
+            postResponse.className = "post-response error";
         }
     }
     
@@ -466,12 +446,6 @@ function initForum() {
         }
     }
     
-    // Set up initial event listener if elements exist
-    if (postForm) {
-        postForm.addEventListener('submit', handleThreadSubmission);
-    }
-
-    // Function to load posts from the API
     async function loadPosts() {
         try {
             // Get the auth token
@@ -487,7 +461,12 @@ function initForum() {
             }
             
             console.log('Fetching posts from API...');
-            const response = await fetch(`${API_URL}/api/forum/posts`, {
+            
+            // Log URL for debugging
+            const postsUrl = `${API_URL}/api/forum/posts`;
+            console.log('GET posts URL:', postsUrl);
+            
+            const response = await fetch(postsUrl, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -495,67 +474,45 @@ function initForum() {
                 }
             });
             
-            const data = await response.json();
-            console.log('API response for posts:', data);
+            console.log('Raw GET posts response:', response);
+            const responseClone = response.clone();
             
-            if (!postsList) return;
-            
-            // Clear loading message
-            postsList.innerHTML = '';
-            
-            let postsToDisplay = [];
-            
-            if (response.ok && data.posts && data.posts.length > 0) {
-                console.log(`Loaded ${data.posts.length} posts successfully from API`);
-                // Sort threads by timestamp (newest first)
-                postsToDisplay = data.posts.sort((a, b) => {
-                    return new Date(b.timestamp) - new Date(a.timestamp);
-                });
-            } else {
-                console.log('No posts returned from API or error occurred', response.status);
+            try {
+                const data = await response.json();
+                console.log('API response for posts:', data);
                 
-                // Try to load from localStorage fallback
-                if (USE_LOCAL_STORAGE_FALLBACK) {
-                    postsToDisplay = getPostsFromLocalStorage();
-                    console.log('Falling back to localStorage posts:', postsToDisplay.length);
-                }
-            }
-            
-            // Update cache
-            postsCache = postsToDisplay;
-            
-            if (postsToDisplay.length > 0) {
-                // Add each post to the list
-                postsToDisplay.forEach(post => {
-                    addThreadToList(post);
-                });
-            } else {
-                // Show empty state message
-                postsList.innerHTML = '<div class="empty-state">No threads yet. Be the first to post!</div>';
-            }
-            
-            // Save to localStorage for future fallback
-            if (USE_LOCAL_STORAGE_FALLBACK) {
-                savePostsToLocalStorage();
-            }
-            
-        } catch (error) {
-            console.error('Error loading threads:', error);
-            
-            // Try to load from localStorage fallback
-            if (USE_LOCAL_STORAGE_FALLBACK && postsList) {
-                const fallbackPosts = getPostsFromLocalStorage();
-                if (fallbackPosts.length > 0) {
-                    console.log('Error with API, using localStorage fallback posts');
-                    postsList.innerHTML = '';
-                    postsCache = fallbackPosts;
-                    fallbackPosts.forEach(post => {
+                if (!postsList) return;
+                
+                // Clear loading message
+                postsList.innerHTML = '';
+                
+                if (response.ok && data.threads && data.threads.length > 0) {
+                    console.log(`Loaded ${data.threads.length} posts successfully from API`);
+                    // Sort threads by timestamp (newest first)
+                    postsCache = data.threads.sort((a, b) => {
+                        return new Date(b.timestamp) - new Date(a.timestamp);
+                    });
+                    
+                    // Add each post to the list
+                    postsCache.forEach(post => {
                         addThreadToList(post);
                     });
                 } else {
-                    postsList.innerHTML = `<div class="loading-message error">Error loading threads: ${error.message}</div>`;
+                    console.log('No posts returned from API or error occurred', response.status);
+                    // Show empty state message
+                    postsList.innerHTML = '<div class="empty-state">No threads yet. Be the first to post!</div>';
                 }
-            } else if (postsList) {
+            } catch (jsonError) {
+                console.error('Error parsing GET posts response:', jsonError);
+                const rawText = await responseClone.text();
+                console.log('Raw GET posts response text:', rawText);
+                if (postsList) {
+                    postsList.innerHTML = `<div class="loading-message error">Error loading threads: Could not parse server response</div>`;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading threads:', error);
+            if (postsList) {
                 postsList.innerHTML = `<div class="loading-message error">Error loading threads: ${error.message}</div>`;
             }
         }
@@ -600,6 +557,13 @@ function initForum() {
         const subjectHtml = thread.subject ? 
             `<span class="thread-subject">${escapeHTML(thread.subject)}</span>` : '';
         
+        // Admin controls - only for admin mode, no user delete buttons
+        const isAdmin = localStorage.getItem('username') === 'admin';
+        const adminControls = isAdmin && adminMode ? 
+            `<div class="thread-admin-controls">
+                <button class="delete-thread-btn" data-thread-id="${thread.id}">Delete</button>
+            </div>` : '';
+        
         // Set thread HTML
         threadElement.innerHTML = `
             <div class="thread-post">
@@ -612,6 +576,7 @@ function initForum() {
                     <span class="post-timestamp">${formattedDate}</span>
                 </div>
                 <div class="post-content">${escapeHTML(thread.content)}</div>
+                ${adminControls}
             </div>
             
             <div class="reply-form-container">
@@ -643,6 +608,88 @@ function initForum() {
         if (replyForm) {
             replyForm.addEventListener('submit', handleReplySubmission);
         }
+        
+        // Add event listener to delete button if present (admin only)
+        const deleteBtn = threadElement.querySelector('.delete-thread-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => deleteThread(thread.id));
+        }
+    }
+    
+    // Function to delete a thread (admin only)
+    async function deleteThread(threadId) {
+        // Verify user is admin
+        const username = localStorage.getItem('username');
+        if (username !== 'admin') {
+            console.error('Unauthorized delete attempt');
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to delete this thread? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('You must be logged in as admin to delete threads');
+                return;
+            }
+            
+            console.log(`Deleting thread: ${threadId}`);
+            
+            // Log the full URL for debugging
+            const deleteUrl = `${API_URL}/api/forum/posts/${threadId}`;
+            console.log(`Sending DELETE request to: ${deleteUrl}`);
+            
+            const response = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            console.log(`Delete response status: ${response.status}`);
+            
+            // Clone response for potential second read
+            const responseClone = response.clone();
+            
+            try {
+                const data = await response.json();
+                console.log('Delete response data:', data);
+                
+                if (response.ok) {
+                    // Remove thread from UI
+                    const threadElement = document.querySelector(`.thread[data-thread-id="${threadId}"]`);
+                    if (threadElement) {
+                        threadElement.remove();
+                    }
+                    
+                    // Remove from cache
+                    postsCache = postsCache.filter(post => post.id !== threadId);
+                    
+                    console.log(`Thread ${threadId} deleted successfully`);
+                    alert('Thread deleted successfully');
+                } else {
+                    alert(`Error deleting thread: ${data.error || 'Unknown error'}`);
+                    console.error('Error deleting thread:', data);
+                }
+            } catch (jsonError) {
+                console.error('Error parsing JSON response:', jsonError);
+                try {
+                    const textResponse = await responseClone.text();
+                    console.log('Raw response text:', textResponse);
+                    alert(`Error deleting thread: Could not parse server response`);
+                } catch (textError) {
+                    console.error('Error reading response text:', textError);
+                    alert(`Error deleting thread: Server responded with status ${response.status}`);
+                }
+            }
+        } catch (error) {
+            alert(`Error deleting thread: ${error.message}`);
+            console.error('Error deleting thread:', error);
+        }
     }
     
     // Generate HTML for a reply
@@ -673,25 +720,24 @@ function initForum() {
             // Remove the no-replies class if it exists
             repliesHeader.classList.remove('no-replies');
             
-            // Count existing replies and update the header
-            const replyCount = repliesContainer.querySelectorAll('.reply').length + 1; // +1 for the new reply
-            repliesHeader.textContent = `${replyCount} ${replyCount === 1 ? 'Reply' : 'Replies'}`;
+            // Calculate the new count
+            const currentReplies = repliesContainer.querySelectorAll('.reply').length;
+            const newCount = currentReplies + 1;
+            repliesHeader.textContent = `${newCount} ${newCount === 1 ? 'Reply' : 'Replies'}`;
         }
         
-        // Create new reply element
-        const replyHtml = generateReplyHtml(reply);
-        
-        // Convert HTML to DOM element
+        // Create reply element from the HTML
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = replyHtml;
-        const replyElement = tempDiv.firstChild;
+        tempDiv.innerHTML = generateReplyHtml(reply);
+        const replyElement = tempDiv.firstElementChild;
         
-        // Append the reply to the replies container
+        // Append to the end of the replies container
         repliesContainer.appendChild(replyElement);
     }
-
-    // Helper function to escape HTML (prevent XSS)
+    
+    // Escape HTML to prevent XSS
     function escapeHTML(str) {
+        if (!str) return '';
         return str
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -700,18 +746,53 @@ function initForum() {
             .replace(/'/g, '&#039;');
     }
     
-    // Listen for auth changes and update the forum accordingly
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'authToken') {
-            console.log("Auth token changed in storage");
-            // Token has changed, check authentication again
-            checkAuthentication();
+    // Function to confirm and purge all posts (admin only)
+    async function confirmPurgeAllPosts() {
+        // Verify user is admin
+        const username = localStorage.getItem('username');
+        if (username !== 'admin') {
+            console.error('Unauthorized purge attempt');
+            return;
         }
-    });
+        
+        if (confirm('WARNING: This will permanently delete ALL forum posts. This action cannot be undone. Continue?')) {
+            if (confirm('Are you ABSOLUTELY SURE? This is your last chance to cancel.')) {
+                await purgeAllPosts();
+            }
+        }
+    }
     
-    // Add a global listener for successful login
-    document.addEventListener('userLoggedIn', (e) => {
-        console.log("User logged in event received", e.detail);
-        checkAuthentication();
-    });
+    // Function to purge all posts
+    async function purgeAllPosts() {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('You must be logged in as admin to purge posts');
+                return;
+            }
+            
+            console.log('Purging all posts...');
+            const response = await fetch(`${API_URL}/api/forum/posts/purge`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (response.ok) {
+                alert('All posts have been purged successfully.');
+                postsCache = [];
+                if (postsList) {
+                    postsList.innerHTML = '<div class="empty-state">No threads yet. Be the first to post!</div>';
+                }
+            } else {
+                const errorData = await response.json();
+                alert(`Error purging posts: ${errorData.error || 'Permission denied'}`);
+            }
+        } catch (error) {
+            console.error('Error purging posts:', error);
+            alert(`Error: ${error.message}`);
+        }
+    }
 } 

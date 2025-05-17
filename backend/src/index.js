@@ -184,6 +184,8 @@ export default {
 			});
 		}
 
+		console.log(`Request path: ${path}, method: ${request.method}`);
+
 		// Route requests to the appropriate handler
 		if (path === '/api/register' && request.method === 'POST') {
 			return handleRegister(request, env);
@@ -205,6 +207,21 @@ export default {
 		if ((path === '/api/forum/threads' || path === '/api/forum/posts') && request.method === 'POST') {
 			return handleCreateThread(request, env);
 		}
+		
+		// Admin endpoint to delete a thread - support both /threads and /posts paths
+		const threadDeleteMatch = path.match(/^\/api\/forum\/threads\/([^\/]+)$/);
+		const postDeleteMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)$/);
+		
+		if ((threadDeleteMatch || postDeleteMatch) && request.method === 'DELETE') {
+			const threadId = threadDeleteMatch ? threadDeleteMatch[1] : postDeleteMatch[1];
+			console.log(`DELETE request for thread ID: ${threadId}`);
+			return handleDeleteThread(request, env, threadId);
+		}
+		
+		// Admin endpoint to purge all threads - support both /threads and /posts paths
+		if ((path === '/api/forum/threads/purge' || path === '/api/forum/posts/purge') && request.method === 'DELETE') {
+			return handlePurgeAllThreads(request, env);
+		}
 
 		// Handle replies to threads - support both /threads and /posts paths
 		const threadReplyMatch = path.match(/^\/api\/forum\/threads\/([^\/]+)\/replies$/);
@@ -215,6 +232,7 @@ export default {
 			return handleCreateReply(request, env, threadId);
 		}
 
+		console.log(`No handler matched for path: ${path}, method: ${request.method}`);
 		// Default response for unhandled routes
 		return jsonResponse({ error: 'Not found' }, 404, request);
 	}
@@ -414,6 +432,104 @@ async function handleCreateReply(request, env, threadId) {
 	} catch (error) {
 		console.error('Create reply error:', error);
 		return jsonResponse({ error: `Failed to create reply: ${error.message}` }, 500, request);
+	}
+}
+
+// Handle deletion of a thread (admin only)
+async function handleDeleteThread(request, env, threadId) {
+	try {
+		// Check for authentication
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return jsonResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		console.log(`Processing thread deletion for ID: ${threadId}`);
+		
+		// Get the forum Durable Object
+		const id = env.FORUM.idFromName('forum-data');
+		const forumObj = env.FORUM.get(id);
+		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = `/threads/${threadId}`;
+		
+		console.log(`Forwarding to Durable Object URL: ${doURL.toString()}`);
+		
+		// Forward the headers to the Durable Object
+		const headers = new Headers();
+		headers.set('Authorization', authHeader);
+		if (request.headers.has('Origin')) {
+			headers.set('Origin', request.headers.get('Origin'));
+		}
+		
+		// Call the deleteThread method on the Durable Object
+		const response = await forumObj.fetch(doURL.toString(), {
+			method: 'DELETE',
+			headers
+		});
+		
+		const responseClone = response.clone();
+		try {
+			const responseData = await response.json();
+			console.log(`Durable Object deleteThread response:`, responseData);
+			return new Response(JSON.stringify(responseData), {
+				status: response.status,
+				headers: {
+					'Content-Type': 'application/json',
+					'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
+					'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
+					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+				},
+			});
+		} catch (e) {
+			console.error('Error parsing JSON from Durable Object:', e);
+			const text = await responseClone.text();
+			console.log('Raw response text:', text);
+			return jsonResponse({ error: 'Internal server error' }, 500, request);
+		}
+	} catch (error) {
+		console.error('Delete thread error:', error);
+		return jsonResponse({ error: `Failed to delete thread: ${error.message}` }, 500, request);
+	}
+}
+
+// Handle purging all threads (admin only)
+async function handlePurgeAllThreads(request, env) {
+	try {
+		// Check for authentication
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return jsonResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Get the forum Durable Object
+		const id = env.FORUM.idFromName('forum-data');
+		const forumObj = env.FORUM.get(id);
+		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = "/threads/purge";
+		
+		// Forward the headers to the Durable Object
+		const headers = new Headers();
+		headers.set('Authorization', authHeader);
+		if (request.headers.has('Origin')) {
+			headers.set('Origin', request.headers.get('Origin'));
+		}
+		
+		// Call the purgeAllThreads method on the Durable Object
+		const response = await forumObj.fetch(doURL.toString(), {
+			method: 'DELETE',
+			headers
+		});
+		
+		return response;
+	} catch (error) {
+		console.error('Purge threads error:', error);
+		return jsonResponse({ error: `Failed to purge threads: ${error.message}` }, 500, request);
 	}
 }
 
@@ -664,6 +780,8 @@ export class ForumObject extends DurableObject {
 		const url = new URL(request.url);
 		const path = url.pathname;
 		
+		console.log(`ForumObject received request with path: ${path}, method: ${request.method}`);
+		
 		// Route requests based on path
 		if (path === '/validate' || path.endsWith('/validate')) {
 			return this.validateRequest(request);
@@ -675,6 +793,19 @@ export class ForumObject extends DurableObject {
 			} else if (request.method === 'POST') {
 				return this.createThread(request);
 			}
+		}
+		
+		// Admin-only endpoint to purge all threads
+		if ((path === '/threads/purge' || path.endsWith('/threads/purge')) && request.method === 'DELETE') {
+			return this.purgeAllThreads(request);
+		}
+		
+		// Handle deleting a specific thread (admin only)
+		const deleteMatch = path.match(/^\/threads\/([^\/]+)$/);
+		if (deleteMatch && request.method === 'DELETE') {
+			const threadId = deleteMatch[1];
+			console.log(`ForumObject handling delete for thread ID: ${threadId}`);
+			return this.deleteThread(request, threadId);
 		}
 		
 		// Handle replies to threads
@@ -689,6 +820,7 @@ export class ForumObject extends DurableObject {
 			return this.storeSessionRequest(request);
 		}
 		
+		console.log(`ForumObject: No handler matched for path: ${path}, method: ${request.method}`);
 		return this.corsResponse({ error: `Not found: ${path}` }, 404, request);
 	}
 
@@ -825,5 +957,59 @@ export class ForumObject extends DurableObject {
 			console.error('Error storing session:', error);
 			return this.corsResponse({ error: error.message }, 500, request);
 		}
+	}
+
+	// Delete a specific thread (admin only)
+	async deleteThread(request, threadId) {
+		const username = await this.validateToken(request);
+		if (!username) {
+			return this.corsResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Check if user is an admin
+		if (username !== 'admin') {
+			return this.corsResponse({ error: 'Admin privileges required' }, 403, request);
+		}
+		
+		// Get existing threads
+		const threads = await this.state.storage.get("threads") || [];
+		
+		// Find the thread to delete
+		const threadIndex = threads.findIndex(t => t.id === threadId);
+		if (threadIndex === -1) {
+			return this.corsResponse({ error: 'Thread not found' }, 404, request);
+		}
+		
+		// Remove the thread
+		threads.splice(threadIndex, 1);
+		
+		// Store updated threads
+		await this.state.storage.put("threads", threads);
+		
+		return this.corsResponse({ 
+			success: true,
+			message: 'Thread deleted successfully'
+		}, 200, request);
+	}
+	
+	// Purge all threads (admin only)
+	async purgeAllThreads(request) {
+		const username = await this.validateToken(request);
+		if (!username) {
+			return this.corsResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Check if user is an admin
+		if (username !== 'admin') {
+			return this.corsResponse({ error: 'Admin privileges required' }, 403, request);
+		}
+		
+		// Delete all threads
+		await this.state.storage.delete("threads");
+		
+		return this.corsResponse({ 
+			success: true,
+			message: 'All threads purged successfully'
+		}, 200, request);
 	}
 }
