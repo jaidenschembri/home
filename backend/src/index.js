@@ -71,7 +71,9 @@ async function handleLogin(request, env) {
 			return jsonResponse({ error: 'Username and password are required' }, 400);
 		}
 
-		// Get the user Durable Object
+		// Get the user Durable Object - we need to use consistent identification
+		// During registration we use email, so we should use that same identifier here
+		// Since we're passing username in the login form, we'll use that as the key
 		const id = env.USERS.idFromName(`user-${username}`);
 		const userObj = env.USERS.get(id);
 
@@ -100,8 +102,8 @@ async function handleRegister(request, env) {
 			return jsonResponse({ error: 'Invalid invite code' }, 403);
 		}
 
-		// Get the user Durable Object
-		const id = env.USERS.idFromName(`user-${email}`);
+		// Get the user Durable Object - use username as the consistent identifier
+		const id = env.USERS.idFromName(`user-${username}`);
 		const userObj = env.USERS.get(id);
 		
 		// Call the register method on the Durable Object
@@ -210,8 +212,8 @@ export class UsersObject extends DurableObject {
 		if (!userData) {
 			return jsonResponse({ error: 'User not found' }, 404);
 		}
-		// Check if username matches
-		if (userData.username !== username) {
+		// Check if username matches (allow login with either username or email)
+		if (userData.username !== username && userData.email !== username) {
 			return jsonResponse({ error: 'Invalid credentials' }, 401);
 		}
 		// Check if password matches
@@ -224,7 +226,7 @@ export class UsersObject extends DurableObject {
 		// Store the session token
 		await this.state.storage.put("session", {
 			token,
-			username,
+			username: userData.username,
 			expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
 		});
 		return jsonResponse({
