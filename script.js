@@ -5,6 +5,13 @@ window.addEventListener('DOMContentLoaded', () => {
     initAuthModal();
 });
 
+// Constants
+const API_URL = 'https://still-wood-forum-v2.jaidenschembri1.workers.dev';
+const AUTH_TOKEN_KEY = 'authToken';
+const ANIMATION_TIMEOUT = 500;
+const MODAL_FADE_TIMEOUT = 1000;
+const MODAL_FADE_INTERVAL = 50;
+
 // Theme toggle functionality
 function initThemeToggle() {
     const toggleBtn = document.getElementById('theme-toggle');
@@ -33,7 +40,7 @@ function initThemeToggle() {
         // Reset animation classes after animation completes
         setTimeout(() => {
             toggleIcon.classList.remove('to-light', 'to-dark');
-        }, 500);
+        }, ANIMATION_TIMEOUT);
         
         isDark = !isDark;
     });
@@ -123,10 +130,22 @@ function initStarfield() {
 
 // === AUTH MODAL LOGIC ===
 function initAuthModal() {
-    // Configure API URL based on environment
-    // Use the same URL in both local development and production since our changes are deployed
-    const API_URL = 'https://still-wood-forum-v2.jaidenschembri1.workers.dev';
+    // Constants defined at the top
     console.log('Using API URL:', API_URL);
+    
+    // Fetch helper function
+    async function fetchWithErrorHandling(url, options) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`Network response error: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            console.error(`Fetch error for ${url}:`, error);
+            throw error;
+        }
+    }
     
     const modal = document.getElementById('auth-modal');
     const overlay = document.getElementById('auth-modal-overlay');
@@ -145,10 +164,10 @@ function initAuthModal() {
 
     // Check if the user is already logged in
     function checkAuthStatus() {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (token) {
             // Validate token and get user info
-            fetch(`${API_URL}/api/validate`, {
+            fetchWithErrorHandling(`${API_URL}/api/validate`, {
                 method: 'GET',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -156,20 +175,19 @@ function initAuthModal() {
                 },
                 mode: 'cors'
             })
-            .then(response => response.json())
             .then(data => {
                 if (data.valid && data.user) {
                     // Show signed in text with username
                     showSignedInState(data.user.username);
                 } else {
                     // Token is invalid, remove it
-                    localStorage.removeItem('authToken');
+                    localStorage.removeItem(AUTH_TOKEN_KEY);
                     showSignedOutState();
                 }
             })
             .catch(error => {
                 console.error('Error validating token:', error);
-                localStorage.removeItem('authToken');
+                localStorage.removeItem(AUTH_TOKEN_KEY);
                 showSignedOutState();
             });
         } else {
@@ -194,7 +212,7 @@ function initAuthModal() {
     
     // Logout function
     function logout() {
-        localStorage.removeItem('authToken');
+        localStorage.removeItem(AUTH_TOKEN_KEY);
         showSignedOutState();
     }
     
@@ -266,22 +284,32 @@ function initAuthModal() {
         const password = document.getElementById('regPassword').value;
         const inviteCode = document.getElementById('regInvite').value;
         
+        // Form validation helper
+        const validateForm = (email, username, password) => {
+            if (!email || !username || !password) {
+                responseDiv.className = 'auth-error';
+                responseDiv.textContent = 'All fields are required';
+                return false;
+            }
+            return true;
+        };
+        
+        if (!validateForm(email, username, password)) return;
+        
         console.log('Attempting registration with API URL:', API_URL);
         
         try {
-            const response = await fetch(`${API_URL}/api/register`, {
+            const data = await fetchWithErrorHandling(`${API_URL}/api/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, username, password, inviteCode }),
                 mode: 'cors'
             });
             
-            console.log('Registration response status:', response.status);
-            const data = await response.json();
             console.log('Registration response data:', data);
             
             responseDiv.textContent = JSON.stringify(data, null, 2);
-            if (response.ok) {
+            if (data.success) {
                 // Auto-fill login form if registration was successful
                 document.getElementById('loginUsername').value = username;
                 document.getElementById('loginPassword').value = password;
@@ -298,19 +326,31 @@ function initAuthModal() {
         e.preventDefault();
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
+        
+        // Form validation helper
+        const validateForm = (username, password) => {
+            if (!username || !password) {
+                responseDiv.className = 'auth-error';
+                responseDiv.textContent = 'Username and password are required';
+                return false;
+            }
+            return true;
+        };
+        
+        if (!validateForm(username, password)) return;
+        
         responseDiv.textContent = "Logging in...";
         
         try {
-            const response = await fetch(`${API_URL}/api/login`, {
+            const data = await fetchWithErrorHandling(`${API_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
                 mode: 'cors'
             });
-            const data = await response.json();
             
-            if (response.ok && data.token) {
-                localStorage.setItem('authToken', data.token);
+            if (data.token) {
+                localStorage.setItem(AUTH_TOKEN_KEY, data.token);
                 responseDiv.className = 'auth-success';
                 responseDiv.textContent = `Welcome, ${data.user.username}!`;
                 
@@ -336,8 +376,8 @@ function initAuthModal() {
                             clearInterval(fadeEffect);
                             hideModal();
                         }
-                    }, 50);
-                }, 1000);
+                    }, MODAL_FADE_INTERVAL);
+                }, MODAL_FADE_TIMEOUT);
             } else {
                 responseDiv.className = 'auth-error';
                 responseDiv.textContent = data.error || 'Login failed. Please check your credentials.';
