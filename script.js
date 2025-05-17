@@ -175,7 +175,9 @@ function initStarfield() {
 
 // === AUTH MODAL LOGIC ===
 function initAuthModal() {
-    // Configure API URL based on environment    const API_URL = 'http://127.0.0.1:8787'; // Local development    console.log('Using API URL:', API_URL);
+    // Configure API URL based on environment
+    const API_URL = 'https://still-wood-e0a1.jaidenschembri1.workers.dev';
+    console.log('Using API URL:', API_URL);
     
     const modal = document.getElementById('auth-modal');
     const overlay = document.getElementById('auth-modal-overlay');
@@ -244,7 +246,12 @@ function initAuthModal() {
         const password = document.getElementById('regPassword').value;
         const inviteCode = document.getElementById('regInvite').value;
         try {
-            const response = await fetch(`${API_URL}/api/register`, {                method: 'POST',                headers: { 'Content-Type': 'application/json' },                body: JSON.stringify({ email, username, password, inviteCode }),                mode: 'cors'            });
+            const response = await fetch(`${API_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, username, password, inviteCode }),
+                mode: 'cors'
+            });
             const data = await response.json();
             responseDiv.textContent = JSON.stringify(data, null, 2);
             if (response.ok) {
@@ -264,7 +271,12 @@ function initAuthModal() {
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
         try {
-            const response = await fetch(`${API_URL}/api/login`, {                method: 'POST',                headers: { 'Content-Type': 'application/json' },                body: JSON.stringify({ username, password }),                mode: 'cors'            });
+            const response = await fetch(`${API_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+                mode: 'cors'
+            });
             const data = await response.json();
             responseDiv.textContent = JSON.stringify(data, null, 2);
             if (response.ok && data.token) {
