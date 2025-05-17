@@ -125,7 +125,7 @@ function initStarfield() {
 function initAuthModal() {
     // Configure API URL based on environment
     // Use the same URL in both local development and production since our changes are deployed
-    const API_URL = 'https://still-wood-e0a1.jaidenschembri1.workers.dev';
+    const API_URL = 'https://still-wood-forum-v2.jaidenschembri1.workers.dev';
     console.log('Using API URL:', API_URL);
     
     const modal = document.getElementById('auth-modal');
@@ -316,6 +316,11 @@ function initAuthModal() {
                 
                 // Update UI to show signed in state
                 showSignedInState(data.user.username);
+                
+                // Dispatch custom event for successful login
+                document.dispatchEvent(new CustomEvent('userLoggedIn', {
+                    detail: { username: data.user.username }
+                }));
                 
                 // Fade out and hide modal
                 setTimeout(() => {

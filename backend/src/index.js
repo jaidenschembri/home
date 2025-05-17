@@ -193,13 +193,26 @@ export default {
 			return handleLogin(request, env);
 		}
 
-		// Forum API endpoints
-		if (path === '/api/forum/posts' && request.method === 'GET') {
-			return handleGetPosts(request, env);
+		if (path === '/api/validate' && request.method === 'GET') {
+			return handleValidate(request, env);
 		}
 
-		if (path === '/api/forum/posts' && request.method === 'POST') {
-			return handleCreatePost(request, env);
+		// Forum API endpoints - support both /threads and /posts paths
+		if ((path === '/api/forum/threads' || path === '/api/forum/posts') && request.method === 'GET') {
+			return handleGetThreads(request, env);
+		}
+
+		if ((path === '/api/forum/threads' || path === '/api/forum/posts') && request.method === 'POST') {
+			return handleCreateThread(request, env);
+		}
+
+		// Handle replies to threads - support both /threads and /posts paths
+		const threadReplyMatch = path.match(/^\/api\/forum\/threads\/([^\/]+)\/replies$/);
+		const postReplyMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)\/replies$/);
+		
+		if ((threadReplyMatch || postReplyMatch) && request.method === 'POST') {
+			const threadId = threadReplyMatch ? threadReplyMatch[1] : postReplyMatch[1];
+			return handleCreateReply(request, env, threadId);
 		}
 
 		// Default response for unhandled routes
@@ -207,39 +220,97 @@ export default {
 	}
 };
 
-// Forum posts handler - Get all posts
-async function handleGetPosts(request, env) {
+// Validate token handler
+async function handleValidate(request, env) {
 	try {
-		// Get the forum Durable Object
-		const id = env.FORUM.idFromName('forum-posts');
-		const forumObj = env.FORUM.get(id);
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return jsonResponse({ valid: false }, 401, request);
+		}
+		
+		const token = authHeader.split(' ')[1];
+		if (!token) {
+			return jsonResponse({ valid: false }, 401, request);
+		}
+		
+		// Try to get username from forum sessions first (easier and more efficient)
+		const forumId = env.FORUM.idFromName('forum-data');
+		const forumObj = env.FORUM.get(forumId);
 		
 		// Use the proper absolute URL for Durable Object
 		const requestURL = new URL(request.url);
 		const doURL = new URL(requestURL.origin);
-		doURL.pathname = "/posts";
+		doURL.pathname = "/validate";
 		
-		// Forward the Origin header to the Durable Object
+		// Forward the Authorization header to the Durable Object
 		const headers = new Headers();
+		headers.set('Authorization', authHeader);
 		if (request.headers.has('Origin')) {
 			headers.set('Origin', request.headers.get('Origin'));
 		}
 		
-		// Call the getPosts method on the Durable Object
-		const response = await forumObj.fetch(doURL.toString(), {
-			method: 'GET',
-			headers
-		});
+		// Call the validate method on the Forum Object
+		try {
+			const response = await forumObj.fetch(doURL.toString(), {
+				method: 'GET',
+				headers
+			});
+			
+			if (response.status === 200) {
+				return response;
+			}
+		} catch (error) {
+			console.error('Error validating with forum object:', error);
+			// Fall through to try individual user validation
+		}
 		
-		return response;
+		// If we got here, the forum object couldn't validate the token.
+		// This could happen if sessions aren't synced properly.
+		// As a last resort, we'll have to check each user one by one.
+		
+		console.log("Forum validation failed, trying to find the user directly...");
+		// We need to find which user has this token by checking with the user object
+		// This is inefficient but works as a fallback
+		
+		// In a real app, you would keep track of which user has which token
+		// For this simple app, we'll just use a simple heuristic - try the username in the token
+		// (This assumes the token has something to do with the username, which isn't secure)
+		
+		// Extract a username from the token (hacky, but useful for demo)
+		// This is a very basic approach that only works if token is uuid-like
+		const possibleUsername = token.split('-')[0];
+		if (possibleUsername) {
+			try {
+				const userId = env.USERS.idFromName(`user-${possibleUsername}`);
+				const userObj = env.USERS.get(userId);
+				
+				const userValidateURL = new URL(requestURL.origin);
+				userValidateURL.pathname = "/validate";
+				
+				const userResponse = await userObj.fetch(userValidateURL.toString(), {
+					method: 'GET',
+					headers
+				});
+				
+				if (userResponse.status === 200) {
+					return userResponse;
+				}
+			} catch (error) {
+				console.error(`Error validating token for user ${possibleUsername}:`, error);
+				// Fall through to invalid response
+			}
+		}
+		
+		// If all validation attempts fail
+		return jsonResponse({ valid: false, error: 'Invalid token' }, 401, request);
 	} catch (error) {
-		console.error('Get posts error:', error);
-		return jsonResponse({ error: `Failed to get posts: ${error.message}` }, 500, request);
+		console.error('Validation error:', error);
+		return jsonResponse({ valid: false, error: error.message }, 500, request);
 	}
 }
 
-// Forum posts handler - Create a new post
-async function handleCreatePost(request, env) {
+// Forum threads handler - Get all threads
+async function handleGetThreads(request, env) {
 	try {
 		// Check for authentication
 		const authHeader = request.headers.get('Authorization');
@@ -247,40 +318,102 @@ async function handleCreatePost(request, env) {
 			return jsonResponse({ error: 'Authentication required' }, 401, request);
 		}
 		
-		const token = authHeader.split(' ')[1];
-		if (!token) {
-			return jsonResponse({ error: 'Invalid token format' }, 401, request);
-		}
-		
-		// Validate the post data
-		const { content } = await request.json();
-		if (!content || content.trim() === '') {
-			return jsonResponse({ error: 'Post content is required' }, 400, request);
-		}
-		
 		// Get the forum Durable Object
-		const id = env.FORUM.idFromName('forum-posts');
+		const id = env.FORUM.idFromName('forum-data');
 		const forumObj = env.FORUM.get(id);
 		
 		// Use the proper absolute URL for Durable Object
 		const requestURL = new URL(request.url);
 		const doURL = new URL(requestURL.origin);
-		doURL.pathname = "/posts";
+		doURL.pathname = "/threads";
 		
-		// Forward the Origin header to the Durable Object
-		const headers = new Headers(request.headers);
+		// Forward the headers to the Durable Object
+		const headers = new Headers();
+		headers.set('Authorization', authHeader);
+		if (request.headers.has('Origin')) {
+			headers.set('Origin', request.headers.get('Origin'));
+		}
 		
-		// Call the createPost method on the Durable Object
+		// Call the getThreads method on the Durable Object
 		const response = await forumObj.fetch(doURL.toString(), {
-			method: 'POST',
-			headers,
-			body: JSON.stringify({ content, token })
+			method: 'GET',
+			headers
 		});
 		
 		return response;
 	} catch (error) {
-		console.error('Create post error:', error);
-		return jsonResponse({ error: `Failed to create post: ${error.message}` }, 500, request);
+		console.error('Get threads error:', error);
+		return jsonResponse({ error: `Failed to get threads: ${error.message}` }, 500, request);
+	}
+}
+
+// Forum threads handler - Create a new thread
+async function handleCreateThread(request, env) {
+	try {
+		// Check for authentication
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return jsonResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Get the forum Durable Object
+		const id = env.FORUM.idFromName('forum-data');
+		const forumObj = env.FORUM.get(id);
+		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = "/threads";
+		
+		// Forward all headers and the body to the Durable Object
+		const headers = new Headers(request.headers);
+		
+		// Call the createThread method on the Durable Object
+		const response = await forumObj.fetch(doURL.toString(), {
+			method: 'POST',
+			headers,
+			body: request.body
+		});
+		
+		return response;
+	} catch (error) {
+		console.error('Create thread error:', error);
+		return jsonResponse({ error: `Failed to create thread: ${error.message}` }, 500, request);
+	}
+}
+
+// Forum replies handler - Create a new reply to a thread
+async function handleCreateReply(request, env, threadId) {
+	try {
+		// Check for authentication
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return jsonResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Get the forum Durable Object
+		const id = env.FORUM.idFromName('forum-data');
+		const forumObj = env.FORUM.get(id);
+		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = `/threads/${threadId}/replies`;
+		
+		// Forward all headers and the body to the Durable Object
+		const headers = new Headers(request.headers);
+		
+		// Call the createReply method on the Durable Object
+		const response = await forumObj.fetch(doURL.toString(), {
+			method: 'POST',
+			headers,
+			body: request.body
+		});
+		
+		return response;
+	} catch (error) {
+		console.error('Create reply error:', error);
+		return jsonResponse({ error: `Failed to create reply: ${error.message}` }, 500, request);
 	}
 }
 
@@ -333,8 +466,53 @@ export class UsersObject extends DurableObject {
 			return this.login(request);
 		}
 
+		if (path === '/validate' || path.endsWith('/validate')) {
+			return this.validate(request);
+		}
+
 		console.log(`Path not matched: ${path}`);
 		return jsonResponse({ error: `Not found: ${path}` }, 404, request);
+	}
+
+	// Validate a token
+	async validate(request) {
+		// Get the token from the Authorization header
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return this.corsResponse({ valid: false }, 401, request);
+		}
+		
+		const token = authHeader.split(' ')[1];
+		if (!token) {
+			return this.corsResponse({ valid: false }, 401, request);
+		}
+		
+		// Get the session
+		const session = await this.state.storage.get("session");
+		if (!session || session.token !== token) {
+			return this.corsResponse({ valid: false }, 401, request);
+		}
+		
+		// Check if token is expired
+		const expiresAt = new Date(session.expiresAt);
+		if (expiresAt < new Date()) {
+			return this.corsResponse({ valid: false, error: 'Token expired' }, 401, request);
+		}
+		
+		// Get user data
+		const userData = await this.state.storage.get("userData");
+		if (!userData) {
+			return this.corsResponse({ valid: false, error: 'User not found' }, 404, request);
+		}
+		
+		// Token is valid
+		return this.corsResponse({
+			valid: true,
+			user: {
+				username: userData.username,
+				email: userData.email
+			}
+		}, 200, request);
 	}
 
 	async register(request) {
@@ -378,11 +556,34 @@ export class UsersObject extends DurableObject {
 		// Generate a simple token (in a real app, use a proper JWT library)
 		const token = crypto.randomUUID();
 		// Store the session token
+		const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
 		await this.state.storage.put("session", {
 			token,
 			username: userData.username,
-			expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+			expiresAt
 		});
+		
+		// Also store the session in the forum object so it can validate tokens
+		try {
+			const forumId = this.env.FORUM.idFromName('forum-data');
+			const forumObj = this.env.FORUM.get(forumId);
+			
+			const url = new URL(request.url);
+			url.pathname = "/store-session";
+			
+			await forumObj.fetch(url.toString(), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ 
+					username: userData.username, 
+					token, 
+					expiresAt 
+				})
+			});
+		} catch (error) {
+			console.error('Error storing session in forum object:', error);
+			// Continue anyway, the user is still logged in
+		}
 		
 		return this.corsResponse({
 			success: true,
@@ -419,94 +620,210 @@ export class ForumObject extends DurableObject {
 		});
 	}
 
-	// Get the username from a token
+	// Get username from token
 	async getUsernameFromToken(token) {
-		// We need to find which user has this token
-		// This is not efficient, but for our simple app it's ok
-		const userIdsKey = "userIds";
-		let userIds = await this.state.storage.get(userIdsKey) || [];
-
-		// Iterate through each user to find the token
-		for (const userId of userIds) {
-			const userObjId = this.env.USERS.idFromName(userId);
-			const userObj = this.env.USERS.get(userObjId);
-			
-			try {
-				const url = new URL(request.url);
-				url.pathname = "/validate";
-				
-				const response = await userObj.fetch(url.toString(), {
-					method: 'POST',
-					headers: request.headers,
-					body: JSON.stringify({ token })
-				});
-				
-				const data = await response.json();
-				if (data.valid && data.user) {
-					return data.user.username;
+		// For simplicity, we'll use the token to find the user directly
+		const sessions = await this.state.storage.get("sessions") || {};
+		
+		// Find the session with the matching token
+		for (const [username, sessionData] of Object.entries(sessions)) {
+			if (sessionData.token === token) {
+				// Check if token is expired
+				const expiresAt = new Date(sessionData.expiresAt);
+				if (expiresAt > new Date()) {
+					return username;
 				}
-			} catch (error) {
-				console.error(`Error validating token for ${userId}:`, error);
 			}
 		}
 		
 		return null;
 	}
 
+	// Validate the user's token
+	async validateToken(request) {
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return null;
+		}
+		
+		const token = authHeader.split(' ')[1];
+		if (!token) {
+			return null;
+		}
+		
+		// Get username from token
+		const username = await this.getUsernameFromToken(token);
+		if (!username) {
+			return null;
+		}
+		
+		return username;
+	}
+
 	async fetch(request) {
 		const url = new URL(request.url);
 		const path = url.pathname;
 		
-		if (path === '/posts' || path.endsWith('/posts')) {
+		// Route requests based on path
+		if (path === '/validate' || path.endsWith('/validate')) {
+			return this.validateRequest(request);
+		}
+		
+		if (path === '/threads' || path.endsWith('/threads')) {
 			if (request.method === 'GET') {
-				return this.getPosts(request);
+				return this.getThreads(request);
 			} else if (request.method === 'POST') {
-				return this.createPost(request);
+				return this.createThread(request);
 			}
+		}
+		
+		// Handle replies to threads
+		const replyMatch = path.match(/^\/threads\/([^\/]+)\/replies$/);
+		if (replyMatch && request.method === 'POST') {
+			const threadId = replyMatch[1];
+			return this.createReply(request, threadId);
+		}
+		
+		// Handle session storage
+		if (path === '/store-session' || path.endsWith('/store-session')) {
+			return this.storeSessionRequest(request);
 		}
 		
 		return this.corsResponse({ error: `Not found: ${path}` }, 404, request);
 	}
 
-	async getPosts(request) {
-		// Get all posts from storage
-		const posts = await this.state.storage.get("posts") || [];
-		return this.corsResponse({ posts }, 200, request);
-	}
-
-	async createPost(request) {
-		const { content, token } = await request.json();
-		let username = "Anonymous";
+	// Validate the token and return user info
+	async validateRequest(request) {
+		const username = await this.validateToken(request);
 		
-		// Try to get the username from the token
-		const authHeader = request.headers.get('Authorization');
-		if (authHeader && authHeader.startsWith('Bearer ')) {
-			const authToken = authHeader.split(' ')[1];
-			// For simplicity, we'll use a dummy username based on token
-			// In a real app, you would validate this token properly
-			username = authToken.substring(0, 8) + "...";
+		if (!username) {
+			return this.corsResponse({ valid: false }, 401, request);
 		}
 		
-		// Get existing posts
-		const posts = await this.state.storage.get("posts") || [];
+		return this.corsResponse({
+			valid: true,
+			user: { username }
+		}, 200, request);
+	}
+
+	// Get all threads
+	async getThreads(request) {
+		const username = await this.validateToken(request);
+		if (!username) {
+			return this.corsResponse({ error: 'Authentication required' }, 401, request);
+		}
 		
-		// Create new post
-		const newPost = {
-			id: crypto.randomUUID(),
+		// Get threads from storage
+		const threads = await this.state.storage.get("threads") || [];
+		
+		return this.corsResponse({ threads }, 200, request);
+	}
+
+	// Create a new thread
+	async createThread(request) {
+		const username = await this.validateToken(request);
+		if (!username) {
+			return this.corsResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Parse the request body
+		const { subject, content } = await request.json();
+		
+		if (!content || content.trim() === '') {
+			return this.corsResponse({ error: 'Thread content is required' }, 400, request);
+		}
+		
+		// Get existing threads
+		const threads = await this.state.storage.get("threads") || [];
+		
+		// Create new thread
+		const threadId = Date.now().toString(); // Simple ID generation
+		const newThread = {
+			id: threadId,
+			subject: subject || '',
+			content,
+			username,
+			timestamp: new Date().toISOString(),
+			replies: []
+		};
+		
+		// Add to beginning of threads array
+		threads.unshift(newThread);
+		
+		// Store updated threads
+		await this.state.storage.put("threads", threads);
+		
+		return this.corsResponse({ 
+			success: true,
+			thread: newThread
+		}, 201, request);
+	}
+
+	// Create a reply to a thread
+	async createReply(request, threadId) {
+		const username = await this.validateToken(request);
+		if (!username) {
+			return this.corsResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Parse the request body
+		const { content } = await request.json();
+		
+		if (!content || content.trim() === '') {
+			return this.corsResponse({ error: 'Reply content is required' }, 400, request);
+		}
+		
+		// Get existing threads
+		const threads = await this.state.storage.get("threads") || [];
+		
+		// Find the thread to reply to
+		const threadIndex = threads.findIndex(t => t.id === threadId);
+		if (threadIndex === -1) {
+			return this.corsResponse({ error: 'Thread not found' }, 404, request);
+		}
+		
+		// Create new reply
+		const replyId = Date.now().toString(); // Simple ID generation
+		const newReply = {
+			id: replyId,
 			content,
 			username,
 			timestamp: new Date().toISOString()
 		};
 		
-		// Add to beginning of posts array
-		posts.unshift(newPost);
+		// Add reply to the thread
+		threads[threadIndex].replies.push(newReply);
 		
-		// Store updated posts
-		await this.state.storage.put("posts", posts);
+		// Store updated threads
+		await this.state.storage.put("threads", threads);
 		
 		return this.corsResponse({ 
 			success: true,
-			post: newPost
+			reply: newReply
 		}, 201, request);
+	}
+
+	// Store a user session when they log in
+	async storeSession(username, token, expiresAt) {
+		// Get existing sessions
+		const sessions = await this.state.storage.get("sessions") || {};
+		
+		// Update or add the session
+		sessions[username] = { token, expiresAt };
+		
+		// Store updated sessions
+		await this.state.storage.put("sessions", sessions);
+	}
+
+	// Handle request to store a session
+	async storeSessionRequest(request) {
+		try {
+			const { username, token, expiresAt } = await request.json();
+			await this.storeSession(username, token, expiresAt);
+			return this.corsResponse({ success: true }, 200, request);
+		} catch (error) {
+			console.error('Error storing session:', error);
+			return this.corsResponse({ error: error.message }, 500, request);
+		}
 	}
 }

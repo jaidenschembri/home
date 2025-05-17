@@ -4,17 +4,13 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "still-wood-e0a1",
+	"name": "still-wood-forum-v2",
 	"main": "src/index.js",
 	"compatibility_date": "2025-05-15",
 	"migrations": [
 		{
 			"tag": "v1",
-			"new_classes": ["UsersObject"]
-		},
-		{
-			"tag": "v2",
-			"new_classes": ["ForumObject"]
+			"new_sqlite_classes": ["UsersObject", "ForumObject"]
 		}
 	],
 	"durable_objects": {

@@ -161,6 +161,8 @@ a:hover {
   box-sizing: border-box;
   border: none !important;
   background: none !important;
+  display: flex;
+  justify-content: center;
 }
 
 .ascii pre {
@@ -170,9 +172,8 @@ a:hover {
   letter-spacing: 0 !important;
   white-space: pre !important;
   display: block;
-  width: max-content;
   margin: 0 auto;
-  padding: 0;
+  padding: 20px 0 0 0;
   background: none !important;
   border: none !important;
   -webkit-text-size-adjust: none !important;
