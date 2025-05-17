@@ -76,7 +76,7 @@ async function handleLogin(request, env) {
 		const userObj = env.USERS.get(id);
 
 		// Call the login method on the Durable Object
-		const response = await userObj.fetch('/login', {
+		const response = await userObj.fetch(new URL('/login', request.url).toString(), {
 			method: 'POST',
 			body: JSON.stringify({ username, password }),
 		});
@@ -105,7 +105,7 @@ async function handleRegister(request, env) {
 		const userObj = env.USERS.get(id);
 		
 		// Call the register method on the Durable Object
-		const response = await userObj.fetch('/register', {
+		const response = await userObj.fetch(new URL('/register', request.url).toString(), {
 			method: 'POST',
 			body: JSON.stringify({ email, username, password, inviteCode })
 		});
