@@ -50,7 +50,7 @@ function jsonResponse(data, status = 200) {
 		status,
 		headers: {
 			'Content-Type': 'application/json',
-			'Access-Control-Allow-Origin': '*',  // Allow any origin for simplicity
+			'Access-Control-Allow-Origin': 'https://jaidenschembri.github.io',  // GitHub Pages origin
 			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 			'Access-Control-Max-Age': '86400',   // Cache preflight requests for 24 hours
@@ -64,47 +64,57 @@ console.log('Registration invite code:', INVITE_CODE);
 
 // Login handler
 async function handleLogin(request, env) {
-	const { username, password } = await request.json();
+	try {
+		const { username, password } = await request.json();
 
-	if (!username || !password) {
-		return jsonResponse({ error: 'Username and password are required' }, 400);
+		if (!username || !password) {
+			return jsonResponse({ error: 'Username and password are required' }, 400);
+		}
+
+		// Get the user Durable Object
+		const id = env.USERS.idFromName(`user-${username}`);
+		const userObj = env.USERS.get(id);
+
+		// Call the login method on the Durable Object
+		const response = await userObj.fetch('/login', {
+			method: 'POST',
+			body: JSON.stringify({ username, password }),
+		});
+
+		return response;
+	} catch (error) {
+		console.error('Login error:', error);
+		return jsonResponse({ error: `Login failed: ${error.message}` }, 500);
 	}
-
-	// Get the user Durable Object
-	const id = env.USERS.idFromName(`user-${username}`);
-	const userObj = env.USERS.get(id);
-
-	// Call the login method on the Durable Object
-	const response = await userObj.fetch('/login', {
-		method: 'POST',
-		body: JSON.stringify({ username, password }),
-	});
-
-	return response;
 }
 
 // Registration handler
 async function handleRegister(request, env) {
-	const { email, username, password, inviteCode } = await request.json();
+	try {
+		const { email, username, password, inviteCode } = await request.json();
 
-	if (!email || !username || !password || !inviteCode) {
-		return jsonResponse({ error: 'Email, username, password, and invite code are required' }, 400);
+		if (!email || !username || !password || !inviteCode) {
+			return jsonResponse({ error: 'Email, username, password, and invite code are required' }, 400);
+		}
+		if (inviteCode !== INVITE_CODE) {
+			return jsonResponse({ error: 'Invalid invite code' }, 403);
+		}
+
+		// Get the user Durable Object
+		const id = env.USERS.idFromName(`user-${email}`);
+		const userObj = env.USERS.get(id);
+		
+		// Call the register method on the Durable Object
+		const response = await userObj.fetch('/register', {
+			method: 'POST',
+			body: JSON.stringify({ email, username, password, inviteCode })
+		});
+
+		return response;
+	} catch (error) {
+		console.error('Registration error:', error);
+		return jsonResponse({ error: `Registration failed: ${error.message}` }, 500);
 	}
-	if (inviteCode !== INVITE_CODE) {
-		return jsonResponse({ error: 'Invalid invite code' }, 403);
-	}
-
-	// Get the user Durable Object
-	const id = env.USERS.idFromName(`user-${email}`);
-	const userObj = env.USERS.get(id);
-	
-	// Call the register method on the Durable Object
-	const response = await userObj.fetch('/register', {
-		method: 'POST',
-		body: JSON.stringify({ email, username, password, inviteCode })
-	});
-
-	return response;
 }
 
 // Request handler for the Worker
@@ -118,7 +128,7 @@ export default {
 			return new Response(null, {
 				status: 204,
 				headers: {
-					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Allow-Origin': 'https://jaidenschembri.github.io',
 					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 					'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 					'Access-Control-Max-Age': '86400',

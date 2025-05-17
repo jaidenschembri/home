@@ -245,6 +245,9 @@ function initAuthModal() {
         const username = document.getElementById('regUsername').value;
         const password = document.getElementById('regPassword').value;
         const inviteCode = document.getElementById('regInvite').value;
+        
+        console.log('Attempting registration with API URL:', API_URL);
+        
         try {
             const response = await fetch(`${API_URL}/api/register`, {
                 method: 'POST',
@@ -252,7 +255,11 @@ function initAuthModal() {
                 body: JSON.stringify({ email, username, password, inviteCode }),
                 mode: 'cors'
             });
+            
+            console.log('Registration response status:', response.status);
             const data = await response.json();
+            console.log('Registration response data:', data);
+            
             responseDiv.textContent = JSON.stringify(data, null, 2);
             if (response.ok) {
                 // Auto-fill login form if registration was successful
@@ -261,6 +268,7 @@ function initAuthModal() {
                 showLogin();
             }
         } catch (error) {
+            console.error('Registration error:', error);
             responseDiv.textContent = `Error: ${error.message}`;
         }
     });
