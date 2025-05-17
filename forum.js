@@ -204,7 +204,7 @@ function initForum() {
                 postResponse.className = "post-response success";
                 
                 // Add the new thread to the list
-                addThreadToList(data.post);
+                addThreadToList(data.thread);
                 
                 // Clear success message after 3 seconds
                 setTimeout(() => {
