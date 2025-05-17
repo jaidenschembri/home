@@ -58,6 +58,16 @@
               <button type="submit" class="post-btn">Submit Post</button>
               <div id="post-response" class="post-response"></div>
             </form>
+            <!-- Debug Tools (only visible during development) -->
+            <div class="debug-tools">
+              <div class="debug-header">Debug Tools</div>
+              <div class="debug-info">API Status: <span id="api-status">Checking...</span></div>
+              <div class="debug-controls">
+                <button id="check-api" class="debug-btn">Check API</button>
+                <button id="toggle-storage" class="debug-btn">Toggle Storage Mode</button>
+                <div class="storage-mode">Current Mode: <span id="storage-mode">API with localStorage fallback</span></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

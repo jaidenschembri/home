@@ -14,8 +14,115 @@ function initForum() {
     const authModal = document.getElementById('auth-modal');
     const authOverlay = document.getElementById('auth-modal-overlay');
     
+    // Debug elements
+    const apiStatus = document.getElementById('api-status');
+    const checkApiBtn = document.getElementById('check-api');
+    const toggleStorageBtn = document.getElementById('toggle-storage');
+    const storageMode = document.getElementById('storage-mode');
+    
     // Local cache for posts - will be synced with API
     let postsCache = [];
+    
+    // Flag to use localStorage as a fallback (for debugging)
+    let USE_LOCAL_STORAGE_FALLBACK = true;
+    
+    // Debug tool initialization
+    if (checkApiBtn) {
+        checkApiBtn.addEventListener('click', checkApiConnection);
+    }
+    
+    if (toggleStorageBtn) {
+        toggleStorageBtn.addEventListener('click', toggleStorageMode);
+    }
+    
+    // Function to toggle between API-only and localStorage fallback
+    function toggleStorageMode() {
+        USE_LOCAL_STORAGE_FALLBACK = !USE_LOCAL_STORAGE_FALLBACK;
+        if (storageMode) {
+            storageMode.textContent = USE_LOCAL_STORAGE_FALLBACK ? 
+                'API with localStorage fallback' : 'API only (no fallback)';
+        }
+        console.log('Storage mode changed:', USE_LOCAL_STORAGE_FALLBACK ? 
+            'API with localStorage fallback' : 'API only');
+    }
+    
+    // Function to check API connection
+    async function checkApiConnection() {
+        if (apiStatus) {
+            apiStatus.textContent = 'Checking...';
+            apiStatus.style.color = '#666';
+        }
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                if (apiStatus) {
+                    apiStatus.textContent = 'Not authenticated';
+                    apiStatus.style.color = '#fa5252';
+                }
+                return;
+            }
+            
+            const response = await fetch(`${API_URL}/api/validate`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                mode: 'cors'
+            });
+            
+            const data = await response.json();
+            
+            if (data.valid) {
+                if (apiStatus) {
+                    apiStatus.textContent = 'Connected (API working)';
+                    apiStatus.style.color = '#51cf66';
+                }
+                console.log('API connection successful');
+            } else {
+                if (apiStatus) {
+                    apiStatus.textContent = 'Error: Authentication invalid';
+                    apiStatus.style.color = '#fa5252';
+                }
+                console.log('API connection failed: Auth invalid');
+            }
+        } catch (error) {
+            console.error('API connection check failed:', error);
+            if (apiStatus) {
+                apiStatus.textContent = `Error: ${error.message}`;
+                apiStatus.style.color = '#fa5252';
+            }
+        }
+    }
+    
+    // Check API connection on load
+    checkApiConnection();
+    
+    // Function to save posts to localStorage (fallback mechanism)
+    function savePostsToLocalStorage() {
+        if (USE_LOCAL_STORAGE_FALLBACK) {
+            localStorage.setItem('forum_posts', JSON.stringify(postsCache));
+            console.log('Saved posts to localStorage as fallback:', postsCache.length);
+        }
+    }
+    
+    // Function to load posts from localStorage (fallback mechanism)
+    function getPostsFromLocalStorage() {
+        if (USE_LOCAL_STORAGE_FALLBACK) {
+            const savedPosts = localStorage.getItem('forum_posts');
+            if (savedPosts) {
+                try {
+                    const parsedPosts = JSON.parse(savedPosts);
+                    console.log('Loaded posts from localStorage fallback:', parsedPosts.length);
+                    return parsedPosts;
+                } catch (e) {
+                    console.error('Error parsing saved posts:', e);
+                }
+            }
+        }
+        return [];
+    }
 
     // Check authentication on page load
     checkAuthentication();
@@ -176,6 +283,7 @@ function initForum() {
             postResponse.textContent = "Creating thread...";
             postResponse.className = "post-response";
             
+            console.log('Sending post to API:', { subject, content });
             const response = await fetch(`${API_URL}/api/forum/posts`, {
                 method: 'POST',
                 headers: {
@@ -186,6 +294,7 @@ function initForum() {
             });
             
             const data = await response.json();
+            console.log('API response for post creation:', data, 'Status:', response.status);
             
             if (response.ok) {
                 // Clear form and show success message
@@ -195,8 +304,20 @@ function initForum() {
                 postResponse.className = "post-response success";
                 
                 // Add the new thread to the list and cache
-                addThreadToList(data.thread);
-                postsCache.unshift(data.thread);
+                const newThread = data.thread || {
+                    id: Date.now(),
+                    username: 'You',
+                    subject: subject,
+                    content: content,
+                    timestamp: new Date().toISOString(),
+                    replies: []
+                };
+                
+                addThreadToList(newThread);
+                postsCache.unshift(newThread);
+                
+                // Save to localStorage as fallback
+                savePostsToLocalStorage();
                 
                 // Clear success message after 3 seconds
                 setTimeout(() => {
@@ -204,13 +325,68 @@ function initForum() {
                     postResponse.className = "post-response";
                 }, 3000);
             } else {
-                postResponse.textContent = data.error || "Failed to create thread. Please try again.";
-                postResponse.className = "post-response error";
+                // Try the localStorage fallback if API fails
+                if (USE_LOCAL_STORAGE_FALLBACK) {
+                    console.log('API failed, using localStorage fallback');
+                    const newThread = {
+                        id: Date.now(),
+                        username: 'You (Offline)',
+                        subject: subject,
+                        content: content,
+                        timestamp: new Date().toISOString(),
+                        replies: []
+                    };
+                    
+                    addThreadToList(newThread);
+                    postsCache.unshift(newThread);
+                    savePostsToLocalStorage();
+                    
+                    postContent.value = '';
+                    document.getElementById('threadSubject').value = '';
+                    postResponse.textContent = "Thread created in offline mode";
+                    postResponse.className = "post-response success";
+                    
+                    setTimeout(() => {
+                        postResponse.textContent = "";
+                        postResponse.className = "post-response";
+                    }, 3000);
+                } else {
+                    postResponse.textContent = data.error || "Failed to create thread. Please try again.";
+                    postResponse.className = "post-response error";
+                }
             }
         } catch (error) {
             console.error('Error creating thread:', error);
-            postResponse.textContent = `Error: ${error.message}`;
-            postResponse.className = "post-response error";
+            
+            // Try the localStorage fallback if API fails
+            if (USE_LOCAL_STORAGE_FALLBACK) {
+                console.log('API error, using localStorage fallback');
+                const newThread = {
+                    id: Date.now(),
+                    username: 'You (Offline)',
+                    subject: subject,
+                    content: content,
+                    timestamp: new Date().toISOString(),
+                    replies: []
+                };
+                
+                addThreadToList(newThread);
+                postsCache.unshift(newThread);
+                savePostsToLocalStorage();
+                
+                postContent.value = '';
+                document.getElementById('threadSubject').value = '';
+                postResponse.textContent = "Thread created in offline mode";
+                postResponse.className = "post-response success";
+                
+                setTimeout(() => {
+                    postResponse.textContent = "";
+                    postResponse.className = "post-response";
+                }, 3000);
+            } else {
+                postResponse.textContent = `Error: ${error.message}`;
+                postResponse.className = "post-response error";
+            }
         }
     }
     
@@ -310,6 +486,7 @@ function initForum() {
                 postsList.innerHTML = '<div class="loading-message">Loading threads...</div>';
             }
             
+            console.log('Fetching posts from API...');
             const response = await fetch(`${API_URL}/api/forum/posts`, {
                 method: 'GET',
                 headers: {
@@ -319,32 +496,66 @@ function initForum() {
             });
             
             const data = await response.json();
+            console.log('API response for posts:', data);
             
             if (!postsList) return;
             
             // Clear loading message
             postsList.innerHTML = '';
             
+            let postsToDisplay = [];
+            
             if (response.ok && data.posts && data.posts.length > 0) {
+                console.log(`Loaded ${data.posts.length} posts successfully from API`);
                 // Sort threads by timestamp (newest first)
-                const sortedPosts = data.posts.sort((a, b) => {
+                postsToDisplay = data.posts.sort((a, b) => {
                     return new Date(b.timestamp) - new Date(a.timestamp);
                 });
+            } else {
+                console.log('No posts returned from API or error occurred', response.status);
                 
-                // Update cache
-                postsCache = sortedPosts;
-                
+                // Try to load from localStorage fallback
+                if (USE_LOCAL_STORAGE_FALLBACK) {
+                    postsToDisplay = getPostsFromLocalStorage();
+                    console.log('Falling back to localStorage posts:', postsToDisplay.length);
+                }
+            }
+            
+            // Update cache
+            postsCache = postsToDisplay;
+            
+            if (postsToDisplay.length > 0) {
                 // Add each post to the list
-                sortedPosts.forEach(post => {
+                postsToDisplay.forEach(post => {
                     addThreadToList(post);
                 });
             } else {
                 // Show empty state message
                 postsList.innerHTML = '<div class="empty-state">No threads yet. Be the first to post!</div>';
             }
+            
+            // Save to localStorage for future fallback
+            if (USE_LOCAL_STORAGE_FALLBACK) {
+                savePostsToLocalStorage();
+            }
+            
         } catch (error) {
             console.error('Error loading threads:', error);
-            if (postsList) {
+            
+            // Try to load from localStorage fallback
+            if (USE_LOCAL_STORAGE_FALLBACK && postsList) {
+                const fallbackPosts = getPostsFromLocalStorage();
+                if (fallbackPosts.length > 0) {
+                    console.log('Error with API, using localStorage fallback posts');
+                    postsList.innerHTML = '';
+                    postsCache = fallbackPosts;
+                    fallbackPosts.forEach(post => {
+                        addThreadToList(post);
+                    });
+                } else {
+                    postsList.innerHTML = `<div class="loading-message error">Error loading threads: ${error.message}</div>`;
+                }
+            } else if (postsList) {
                 postsList.innerHTML = `<div class="loading-message error">Error loading threads: ${error.message}</div>`;
             }
         }
