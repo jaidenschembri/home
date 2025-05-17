@@ -66,23 +66,31 @@ console.log('Registration invite code:', INVITE_CODE);
 async function handleLogin(request, env) {
 	try {
 		const { username, password } = await request.json();
+		console.log(`Attempting login for user: ${username}`);
 
 		if (!username || !password) {
 			return jsonResponse({ error: 'Username and password are required' }, 400);
 		}
 
-		// Get the user Durable Object - we need to use consistent identification
-		// During registration we use email, so we should use that same identifier here
-		// Since we're passing username in the login form, we'll use that as the key
+		// Get the user Durable Object
 		const id = env.USERS.idFromName(`user-${username}`);
 		const userObj = env.USERS.get(id);
-
+		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = "/login";
+		
+		console.log(`Calling Durable Object with URL: ${doURL.toString()}`);
+		
 		// Call the login method on the Durable Object
-		const response = await userObj.fetch(new URL('/login', request.url).toString(), {
+		const response = await userObj.fetch(doURL.toString(), {
 			method: 'POST',
 			body: JSON.stringify({ username, password }),
 		});
-
+		
+		console.log(`Durable Object login response status: ${response.status}`);
+		
 		return response;
 	} catch (error) {
 		console.error('Login error:', error);
@@ -94,6 +102,7 @@ async function handleLogin(request, env) {
 async function handleRegister(request, env) {
 	try {
 		const { email, username, password, inviteCode } = await request.json();
+		console.log(`Attempting registration for user: ${username}, email: ${email}`);
 
 		if (!email || !username || !password || !inviteCode) {
 			return jsonResponse({ error: 'Email, username, password, and invite code are required' }, 400);
@@ -106,12 +115,21 @@ async function handleRegister(request, env) {
 		const id = env.USERS.idFromName(`user-${username}`);
 		const userObj = env.USERS.get(id);
 		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = "/register";
+		
+		console.log(`Calling Durable Object with URL: ${doURL.toString()}`);
+		
 		// Call the register method on the Durable Object
-		const response = await userObj.fetch(new URL('/register', request.url).toString(), {
+		const response = await userObj.fetch(doURL.toString(), {
 			method: 'POST',
 			body: JSON.stringify({ email, username, password, inviteCode })
 		});
-
+		
+		console.log(`Durable Object registration response status: ${response.status}`);
+		
 		return response;
 	} catch (error) {
 		console.error('Registration error:', error);
@@ -172,16 +190,20 @@ export class UsersObject extends DurableObject {
 	async fetch(request) {
 		const url = new URL(request.url);
 		const path = url.pathname;
-
-		if (path === '/register') {
+		
+		console.log(`Durable Object received request with path: ${path}, full URL: ${request.url}`);
+		
+		// Check for both exact path matches and basename matches
+		if (path === '/register' || path.endsWith('/register')) {
 			return this.register(request);
 		}
 
-		if (path === '/login') {
+		if (path === '/login' || path.endsWith('/login')) {
 			return this.login(request);
 		}
 
-		return jsonResponse({ error: 'Not found' }, 404);
+		console.log(`Path not matched: ${path}`);
+		return jsonResponse({ error: `Not found: ${path}` }, 404);
 	}
 
 	async register(request) {
