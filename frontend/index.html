@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=1000, user-scalable=yes">
   <link rel="icon" href="images/icons/deer.gif" type="image/x-icon">
   <title>Jaiden</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="base.css">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
 
@@ -92,14 +94,12 @@
     </svg>
   </div>
 </div>
-      <div class="content">
-        <marquee behavior="scroll" direction="left" scrollamount="10">
-          I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion. 
-          I watched c-beams glitter in the dark near the Tannhäuser Gate.
-          All those moments will be lost in time, like tears in rain. Time to die.
-        </marquee>
-      </div>
+
     </header>
+
+    <div class="signin-bar">
+      <button class="signin-btn">Sign in</button>
+    </div>
 
   <div class="columns">
     <aside class="window sidebar">
@@ -111,10 +111,6 @@
           <a href="https://x.com/jaiddog28" target="_blank">Twitter</a><br>
           <a href="https://www.instagram.com/jaidenschembri/" target="_blank">Instagram</a><br>
           <a href="mailto:jaidenschembri1@gmail.com">Email Me</a>
-        </div>
-        <div class="tomagotchi">
-          <a href="https://tamanotchi.world/22684c"><img src="https://tamanotchi.world/i/22684" alt="It's tamaNOTchi! Click to feed!"></a>          
-          <a href="https://tamanotchi.world/22686c"><img src="https://tamanotchi.world/i/22686" alt="It's tamaNOTchi! Click to feed!"></a>    
         </div>
     </aside>
       
@@ -193,6 +189,40 @@
 
 <script src="script.js"></script>
 <script src="https://unpkg.com/webamp@latest/built/webamp.bundle.min.js"></script>
+
+<!-- Modal overlay for auth modal -->
+<div id="auth-modal-overlay" class="modal-overlay"></div>
+
+<!-- Sign In/Sign Up Modal -->
+<div id="auth-modal" class="window" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:200; max-width:400px; min-width:320px;">
+  <div class="title-bar" style="justify-content:space-between;">
+    <span id="auth-modal-title">Sign In</span>
+    <button id="auth-modal-close" style="background:none; border:none; color:inherit; font-size:16px; cursor:pointer;">✕</button>
+  </div>
+  <div class="content" style="height:370px; min-height:370px; display:flex; flex-direction:column; justify-content:center;">
+    <form id="loginForm" style="margin-top:16px; display:flex; flex-direction:column;">
+      <input type="text" id="loginUsername" required placeholder="Username">
+      <input type="password" id="loginPassword" required placeholder="Password">
+      <button type="submit" class="auth-text-btn">Sign In</button>
+    </form>
+    <div id="show-register-link" style="margin-top:10px; font-size:13px; text-align:center;">
+      Don't have an account? <a href="#" id="show-register">Sign up</a>
+    </div>
+    <form id="registerForm" style="margin-top:16px; display:none; flex-direction:column;">
+      <input type="email" id="regEmail" required placeholder="Email">
+      <input type="text" id="regUsername" required placeholder="Username">
+      <input type="text" id="regInvite" required placeholder="Invite Code">
+      <input type="password" id="regPassword" required placeholder="Password">
+      <button type="submit" class="auth-text-btn">Sign Up</button>
+    </form>
+    <div id="show-login-link" style="margin-top:10px; font-size:13px; text-align:center; display:none;">
+      Already have an account? <a href="#" id="show-login">Sign in</a>
+    </div>
+    <div id="auth-response" style="margin-top:16px; min-height:24px; font-size:13px; white-space:pre-wrap;"></div>
+  </div>
+</div>
+
+<!-- End Auth Modal -->
 
 </body>
 </html>

@@ -1,0 +1,130 @@
+/* === MOBILE VARIABLES === */
+:root {
+  --mobile-breakpoint-tablet: 1000px;
+  --mobile-breakpoint-phone: 600px;
+  --mobile-breakpoint-small: 400px;
+  --mobile-body-padding-tablet: 10px 0;
+  --mobile-body-padding-phone: 5px 0;
+  --mobile-page-width-tablet: 98%;
+  --mobile-page-padding-top-tablet: 40px;
+  --mobile-page-padding-top-phone: 30px;
+  --mobile-title-bar-font-size-phone: 10px;
+  --mobile-title-bar-height-phone: 25px;
+  --mobile-content-padding-phone: 8px;
+  --mobile-content-font-size-phone: 12px;
+  --mobile-sticker-img-width-tablet: 120px;
+  --mobile-sticker-img-width-phone: 100px;
+  --mobile-sticker-img-width-small: 80px;
+  --mobile-sticker-img-padding-phone: 2px;
+  --mobile-blinkies-img-max-width-phone: 90%;
+  --mobile-ascii-font-size-phone: 6px;
+  --mobile-ascii-font-size-small: 5px;
+}
+
+/* === MOBILE STYLES === */
+
+/* Small tablets and large phones */
+@media screen and (max-width: 1000px) {
+  body {
+    min-width: auto;
+    padding: var(--mobile-body-padding-tablet);
+  }
+  
+  .page {
+    width: var(--mobile-page-width-tablet);
+    padding-top: var(--mobile-page-padding-top-tablet);
+  }
+  
+  .columns {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .sidebar,
+  .main,
+  .rightbar {
+    width: 100%;
+    margin-left: 0;
+  }
+  
+  .stickers img {
+    width: var(--mobile-sticker-img-width-tablet);
+  }
+  
+  #winamp {
+    margin-top: 40px;
+    align-self: center;
+  }
+}
+
+/* Phones */
+@media screen and (max-width: 600px) {
+  body {
+    padding: var(--mobile-body-padding-phone);
+  }
+  
+  .page {
+    padding-top: var(--mobile-page-padding-top-phone);
+  }
+  
+  .title-bar {
+    font-size: var(--mobile-title-bar-font-size-phone);
+    height: var(--mobile-title-bar-height-phone);
+  }
+  
+  .content {
+    padding: var(--mobile-content-padding-phone);
+    font-size: var(--mobile-content-font-size-phone);
+  }
+  
+  .stickers {
+    gap: 4px;
+  }
+  
+  .stickers img {
+    width: var(--mobile-sticker-img-width-phone);
+    padding: var(--mobile-sticker-img-padding-phone);
+  }
+  
+  .blinkies img {
+    max-width: var(--mobile-blinkies-img-max-width-phone);
+  }
+  
+  /* Adjust ASCII art for small screens */
+  .ascii .content {
+    font-size: var(--mobile-ascii-font-size-phone) !important;
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
+}
+
+/* Very small phones */
+@media screen and (max-width: 400px) {
+  .page {
+    width: 100%;
+    padding-top: 25px;
+  }
+  
+  .window {
+    margin: 5px 0;
+  }
+  
+  .title-bar {
+    padding: 0 5px;
+  }
+  
+  .content {
+    padding: 5px;
+    font-size: 11px;
+  }
+  
+  .stickers img {
+    width: var(--mobile-sticker-img-width-small);
+  }
+  
+  /* Further reduce ASCII art size */
+  .ascii .content {
+    font-size: var(--mobile-ascii-font-size-small) !important;
+    transform: scale(0.8);
+  }
+} 
