@@ -21,6 +21,17 @@
   --modal-btn-border-light: #000;
   --modal-btn-hover-bg-light: #ccc;
   --modal-placeholder-fg-light: #000;
+  --signin-btn-fg: #fff;
+  --signin-btn-radius: 4px;
+  --modal-bg: rgba(20,20,20,0.88);
+  --modal-border: #fff;
+  --modal-title-bg: rgba(20,20,20,0.88);
+  --modal-title-border: #fff;
+  --modal-input-fg: #fff;
+  --modal-input-border: #fff;
+  --modal-placeholder-fg: #bbb;
+  --auth-btn-fg: inherit;
+  --auth-btn-hover-fg: #ccc;
 }
 
 body:not(.light-theme) {

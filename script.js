@@ -169,7 +169,7 @@ function initAuthModal() {
     function showRegister() {
         loginForm.style.display = 'none';
         registerForm.style.display = 'flex';
-        document.getElementById('auth-modal-title').textContent = 'Register';
+        document.getElementById('auth-modal-title').textContent = 'Sign Up';
         if (showRegisterLink) showRegisterLink.style.display = 'none';
         if (showLoginLink) showLoginLink.style.display = 'block';
         responseDiv.textContent = '';

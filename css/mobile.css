@@ -24,11 +24,6 @@
     width: var(--mobile-page-width-tablet);
     padding-top: var(--mobile-page-padding-top-tablet);
   }
-  
-  #winamp {
-    margin-top: 40px;
-    align-self: center;
-  }
 }
 
 /* Phones */

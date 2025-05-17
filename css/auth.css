@@ -8,10 +8,15 @@
   z-index: 200;
   max-width: 400px;
   min-width: 320px;
+  border: 1px solid var(--modal-border);
+  background: var(--modal-bg);
+  padding: 0;
 }
 
 #auth-modal .title-bar {
   justify-content: space-between;
+  background: var(--modal-title-bg);
+  border-bottom: 1px solid var(--modal-title-border);
 }
 
 #auth-modal-close {
@@ -43,8 +48,236 @@
 }
 
 #auth-response {
-  margin-top: 16px;
+  margin: 10px 0;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: center;
+  transition: all 0.3s ease;
   min-height: 24px;
   font-size: 13px;
   white-space: pre-wrap;
+}
+
+/* Sign In Button */
+.signin-bar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: fixed;
+  top: 30px;
+  left: 0;
+  z-index: 99;
+  background: transparent;
+  padding: 0 30px 0 0;
+  pointer-events: none;
+}
+
+.signin-btn {
+  background: none;
+  border: none;
+  color: var(--signin-btn-fg);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 18px;
+  margin-top: 2px;
+  border-radius: var(--signin-btn-radius);
+  transition: background 0.2s, color 0.2s;
+  pointer-events: auto;
+  font-family: var(--base-font);
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 199;
+  display: none;
+}
+
+/* Auth Modal Input Styles */
+#auth-modal .content input {
+  width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  background: none;
+  color: var(--modal-input-fg);
+  border: 1px solid var(--modal-input-border);
+  margin-bottom: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+  font-family: var(--base-font);
+}
+
+#auth-modal .content input::placeholder {
+  font-family: var(--base-font);
+  color: var(--modal-placeholder-fg);
+  font-style: italic;
+}
+
+#auth-modal .content button {
+  background: none;
+  color: var(--modal-input-fg);
+  border: 1px solid var(--modal-input-border);
+  padding: 7px 10px;
+  font-family: var(--base-font);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Auth Button Styles */
+.auth-text-btn {
+  display: inline !important;
+  align-self: center !important;
+  background: none !important;
+  border: none !important;
+  color: var(--auth-btn-fg) !important;
+  font-size: 15px;
+  font-family: var(--base-font);
+  cursor: pointer;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  text-align: center;
+  transition: color 0.2s;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  line-height: inherit !important;
+}
+
+.auth-text-btn:hover {
+  text-decoration: underline;
+  color: var(--auth-btn-hover-fg);
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Input Focus Styles */
+input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: inherit !important;
+}
+
+/* Autofill Styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: var(--modal-input-fg) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px transparent inset !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--modal-input-fg) !important;
+}
+
+#auth-modal .content input:-webkit-autofill::first-line {
+  font-family: var(--base-font);
+  font-size: 14px;
+  color: var(--modal-input-fg) !important;
+}
+
+/* Firefox Autofill */
+@-moz-document url-prefix() {
+  input:-moz-autofill,
+  input:-moz-autofill:focus {
+    transition: background-color 5000s ease-in-out 0s !important;
+    background-color: transparent !important;
+    color: var(--modal-input-fg) !important;
+  }
+}
+
+/* Standard Autofill */
+input:autofill,
+input:autofill:hover, 
+input:autofill:focus {
+  background-color: transparent !important;
+  color: var(--modal-input-fg) !important;
+}
+
+/* Light Theme Autofill Overrides */
+body.light-theme input:-webkit-autofill,
+body.light-theme input:-webkit-autofill:hover,
+body.light-theme input:-webkit-autofill:focus,
+body.light-theme input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--modal-input-fg-light) !important;
+  color: var(--modal-input-fg-light) !important;
+}
+
+body.light-theme #auth-modal .content input:-webkit-autofill::first-line {
+  color: var(--modal-input-fg-light) !important;
+}
+
+body.light-theme input:autofill,
+body.light-theme input:autofill:hover, 
+body.light-theme input:autofill:focus {
+  color: var(--modal-input-fg-light) !important;
+}
+
+@-moz-document url-prefix() {
+  body.light-theme input:-moz-autofill,
+  body.light-theme input:-moz-autofill:focus {
+    color: var(--modal-input-fg-light) !important;
+  }
+}
+
+/* Credential Suggestion Styles */
+input:-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
+input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+}
+
+input:-internal-autofill-selected,
+input:-internal-autofill-previewed {
+  font-family: var(--base-font) !important;
+}
+
+@supports (-webkit-appearance: none) {
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    input:-webkit-autofill-strong-password-suggestion,
+    input:-webkit-autofill-suggestion {
+      font-family: var(--base-font) !important;
+    }
+  }
+}
+
+input:-webkit-autofill-selected {
+  font-family: var(--base-font) !important;
+}
+
+/* Browser-specific Input Styles */
+::-webkit-input-placeholder,
+::placeholder,
+::-webkit-datetime-edit,
+::-webkit-datetime-edit-fields-wrapper,
+::-webkit-datetime-edit-text,
+::-webkit-datetime-edit-month-field,
+::-webkit-datetime-edit-day-field,
+::-webkit-datetime-edit-year-field,
+::-webkit-inner-spin-button,
+::-webkit-calendar-picker-indicator,
+::-webkit-clear-button,
+::-webkit-search-cancel-button,
+::-webkit-search-results-button,
+::-webkit-search-results-decoration,
+::-webkit-contacts-auto-fill-button,
+::-webkit-credentials-auto-fill-button,
+::-webkit-credit-card-auto-fill-button {
+  font-family: var(--base-font) !important;
 } 
