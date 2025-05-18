@@ -1,6 +1,22 @@
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+
+// Get local IP address
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return '127.0.0.1';
+}
+
+const localIP = getLocalIP();
 
 // Check if serve.json exists
 const serveConfigPath = path.join(__dirname, 'serve.json');
@@ -10,11 +26,13 @@ if (!fs.existsSync(serveConfigPath)) {
 }
 
 console.log('Starting local development server with CORS enabled...');
-console.log('Frontend will be available at: http://localhost:3000');
+console.log(`Frontend will be available at: http://localhost:3000`);
+console.log(`For access from other devices: http://${localIP}:3000`);
 console.log('Backend API should be running at: http://127.0.0.1:8787');
+console.log('\nNote: If localhost is not working, please use the IP address instead.');
 
-// Start serve with the config file
-const serve = exec('npx serve --config serve.json -l 3000');
+// Start serve with the config file - listen on all interfaces
+const serve = exec('npx serve --config serve.json --listen tcp://0.0.0.0:3000');
 
 serve.stdout.on('data', (data) => {
   console.log(data.toString());
@@ -33,4 +51,4 @@ process.on('SIGINT', () => {
   console.log('Stopping server...');
   serve.kill();
   process.exit(0);
-}); 
+});

@@ -1,0 +1,11 @@
+{
+  "name": "nojava",
+  "version": "1.0.0",
+  "description": "Local development server",
+  "scripts": {
+    "start": "node start-dev.js"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+} 
