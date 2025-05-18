@@ -349,18 +349,20 @@ function initForum() {
         
         // Get post content
         const content = elements.postContent.value.trim();
-        if (!content) {
-            elements.postResponse.textContent = "Thread content cannot be empty.";
-            elements.postResponse.className = "post-response error";
-            return;
-        }
         
-        // Get subject (optional)
+        // Get subject (optional) 
         const subject = document.getElementById('threadSubject').value.trim();
         
         // Check for image attachment
         const postImageInput = document.getElementById('postImage');
         const imageFile = postImageInput?.files?.[0];
+        
+        // Require either content or an image
+        if (!content && !imageFile) {
+            elements.postResponse.textContent = "Please enter text or attach an image.";
+            elements.postResponse.className = "post-response error";
+            return;
+        }
         
         try {
             elements.postResponse.textContent = "Creating thread...";
@@ -479,16 +481,16 @@ function initForum() {
             return;
         }
         
-        // Check content
-        if (!replyContent) {
-            replyResponse.textContent = "Reply content cannot be empty.";
-            replyResponse.className = "post-response error";
-            return;
-        }
-        
         // Check for image attachment
         const replyImageInput = replyForm.querySelector('.reply-image-input');
         const imageFile = replyImageInput?.files?.[0];
+        
+        // Require either content or an image
+        if (!replyContent && !imageFile) {
+            replyResponse.textContent = "Please enter text or attach an image.";
+            replyResponse.className = "post-response error";
+            return;
+        }
         
         try {
             replyResponse.textContent = "Submitting reply...";
@@ -621,37 +623,9 @@ function initForum() {
                                 addThreadToList(thread);
                             });
                             
-                            // After adding all posts, add event listeners to all reply forms
-                            document.querySelectorAll('.reply-form').forEach(form => {
-                                form.addEventListener('submit', handleReplySubmission);
-                                
-                                // Add image upload handlers to each reply form
-                                const replyImageInput = form.querySelector('.reply-image-input');
-                                const replyImagePreviewContainer = form.querySelector('.image-preview-container');
-                                const replyImagePreview = form.querySelector('.image-preview');
-                                const removeReplyImageBtn = form.querySelector('.remove-image-btn');
-                                
-                                if (replyImageInput && replyImagePreviewContainer && replyImagePreview && removeReplyImageBtn) {
-                                    // Handle image selection
-                                    replyImageInput.addEventListener('change', (e) => {
-                                        const file = e.target.files[0];
-                                        if (file && file.type.startsWith('image/')) {
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                                replyImagePreview.src = event.target.result;
-                                                replyImagePreviewContainer.style.display = 'inline-block';
-                                            };
-                                            reader.readAsDataURL(file);
-                                        }
-                                    });
-                                    
-                                    // Handle image removal
-                                    removeReplyImageBtn.addEventListener('click', () => {
-                                        replyImageInput.value = '';
-                                        replyImagePreview.src = '';
-                                        replyImagePreviewContainer.style.display = 'none';
-                                    });
-                                }
+                            // After adding all posts, set up reply forms
+                            document.querySelectorAll('.thread').forEach(thread => {
+                                setupReplyToggleAndForm(thread);
                             });
                         }
                     }
@@ -778,8 +752,10 @@ function initForum() {
                 </div>
             ` : '<div class="replies-container" data-thread-id="' + thread.id + '"></div>'}
             
-            <form class="reply-form" data-thread-id="${thread.id}">
-                <textarea class="reply-content" placeholder="Write a reply..." required></textarea>
+            <button class="reply-toggle" onclick="document.getElementById('reply-form-${thread.id}').style.display = document.getElementById('reply-form-${thread.id}').style.display === 'none' || document.getElementById('reply-form-${thread.id}').style.display === '' ? 'block' : 'none'; return false;">Reply</button>
+            
+            <form id="reply-form-${thread.id}" class="reply-form" data-thread-id="${thread.id}">
+                <textarea class="reply-content" placeholder="Write a reply..."></textarea>
                 <div class="image-upload-container">
                     <label for="replyImage-${thread.id}" class="image-upload-label">
                         Add image
@@ -807,42 +783,54 @@ function initForum() {
             }
         }
         
-        // Add event listener to the reply form
+        // Add the thread to the posts list
+        elements.postsList.appendChild(threadElement);
+        
+        // Now that the element is in the DOM, add event listeners
+        setupReplyToggleAndForm(threadElement);
+    }
+
+    // Setup reply form functionality
+    function setupReplyToggleAndForm(threadElement) {
         const replyForm = threadElement.querySelector('.reply-form');
+        
         if (replyForm) {
+            // Add event listener to the reply form
             replyForm.addEventListener('submit', handleReplySubmission);
             
-            // Add image upload handlers
-            const replyImageInput = replyForm.querySelector('.reply-image-input');
-            const replyImagePreviewContainer = replyForm.querySelector('.image-preview-container');
-            const replyImagePreview = replyForm.querySelector('.image-preview');
-            const removeReplyImageBtn = replyForm.querySelector('.remove-image-btn');
-            
-            if (replyImageInput && replyImagePreviewContainer && replyImagePreview && removeReplyImageBtn) {
-                // Handle image selection
-                replyImageInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file && file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            replyImagePreview.src = event.target.result;
-                            replyImagePreviewContainer.style.display = 'inline-block';
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-                
-                // Handle image removal
-                removeReplyImageBtn.addEventListener('click', () => {
-                    replyImageInput.value = '';
-                    replyImagePreview.src = '';
-                    replyImagePreviewContainer.style.display = 'none';
-                });
-            }
+            // Setup image upload handlers
+            setupImageUploadHandlers(replyForm);
         }
+    }
+    
+    // Setup image upload handlers
+    function setupImageUploadHandlers(replyForm) {
+        const replyImageInput = replyForm.querySelector('.reply-image-input');
+        const replyImagePreviewContainer = replyForm.querySelector('.image-preview-container');
+        const replyImagePreview = replyForm.querySelector('.image-preview');
+        const removeReplyImageBtn = replyForm.querySelector('.remove-image-btn');
         
-        // Add thread to list
-        elements.postsList.appendChild(threadElement);
+        if (replyImageInput && replyImagePreviewContainer && replyImagePreview && removeReplyImageBtn) {
+            // Handle image selection
+            replyImageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        replyImagePreview.src = event.target.result;
+                        replyImagePreviewContainer.style.display = 'inline-block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Handle image removal
+            removeReplyImageBtn.addEventListener('click', () => {
+                replyImageInput.value = '';
+                replyImagePreview.src = '';
+                replyImagePreviewContainer.style.display = 'none';
+            });
+        }
     }
 
     // Generate HTML for a reply

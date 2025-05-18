@@ -9,6 +9,10 @@
   margin-bottom: 20px;
 }
 
+.forum-container {
+  border: none !important; /* Remove border from container */
+}
+
 .post-form-window {
   margin-bottom: 20px;
   background-color: var(--window-bg);
@@ -21,8 +25,8 @@
 
 .posts-list {
   width: 100%;
-  background-color: var(--window-bg);
-  border: 1px solid var(--border-color);
+  background-color: transparent;
+  border: none;
   color: var(--text-color);
   font-family: var(--base-font);
   padding: 0;
@@ -41,8 +45,7 @@
   box-sizing: border-box;
 }
 
-#postContent,
-.reply-content {
+#postContent {
   width: 100%;
   padding: 10px;
   font-family: var(--base-font);
@@ -53,15 +56,21 @@
   resize: vertical;
   box-sizing: border-box;
   border-radius: 2px;
-}
-
-#postContent {
   min-height: 100px;
 }
 
 .reply-content {
-  min-height: 80px;
+  width: 100%;
   padding: 8px;
+  font-family: var(--base-font);
+  border: 1px solid var(--color-fg);
+  background-color: var(--window-bg);
+  color: var(--text-color);
+  margin-bottom: 10px;
+  resize: vertical;
+  box-sizing: border-box;
+  border-radius: 2px;
+  min-height: 80px;
 }
 
 #postContent:focus,
@@ -117,14 +126,15 @@ body.light-theme .signin-prompt-btn {
 
 /* Thread styling */
 .thread {
-  margin-bottom: 0;
-  border-bottom: 1px solid var(--border-color);
-  padding: 5px 0;
+  margin-bottom: 15px;
+  border: 1px solid var(--color-fg);
+  padding: 5px;
   font-family: var(--base-font);
+  background-color: var(--window-bg);
 }
 
 .thread:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .post-header {
@@ -187,10 +197,28 @@ body.light-theme .signin-prompt-btn {
 }
 
 .reply-form {
+  display: none; /* Hidden by default */
   background-color: var(--window-bg);
   padding: 10px;
   margin-top: 10px;
   border-top: 1px solid var(--border-color);
+}
+
+.reply-toggle {
+  display: inline-block;
+  margin: 8px 0 8px 10px;
+  padding: 2px 0;
+  background: transparent;
+  border: none;
+  color: var(--accent-color);
+  cursor: pointer;
+  font-family: var(--base-font);
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.reply-toggle:hover {
+  color: var(--accent-hover);
 }
 
 .reply-form .image-upload-container {
