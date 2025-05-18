@@ -21,7 +21,8 @@ function initForum() {
         postFormWindow: document.querySelector('.post-form-window'),
         apiStatus: document.getElementById('api-status'),
         checkApiBtn: document.getElementById('check-api'),
-        adminModeBtn: document.getElementById('admin-mode')
+        adminModeBtn: document.getElementById('admin-mode'),
+        adminControls: document.getElementById('admin-controls')
     };
     
     // Local cache for posts - will be synced with API
@@ -87,6 +88,28 @@ function initForum() {
         // Initialize admin mode button if it exists
         if (elements.adminModeBtn) {
             elements.adminModeBtn.addEventListener('click', toggleAdminMode);
+            console.log('Admin mode button initialized');
+        } else {
+            console.log('Admin mode button not found');
+        }
+
+        // Check if user is admin and show admin controls
+        checkAdminStatus();
+    }
+
+    // Function to check if user is admin and show admin controls
+    function checkAdminStatus() {
+        const username = localStorage.getItem('username');
+        console.log('Current username from localStorage:', username);
+        
+        if (username === 'admin' && elements.adminControls) {
+            console.log('Admin detected, showing admin controls');
+            elements.adminControls.style.display = 'block';
+        } else {
+            console.log('Not admin or controls not found', {
+                isAdmin: username === 'admin',
+                controlsExist: !!elements.adminControls
+            });
         }
     }
     
@@ -201,6 +224,9 @@ function initForum() {
                 if (data.user.username) {
                     localStorage.setItem('username', data.user.username);
                     console.log("Username stored:", data.user.username);
+                    
+                    // Check admin status after username is set
+                    checkAdminStatus();
                 }
                 
                 // User is authenticated - show forum content
@@ -231,9 +257,16 @@ function initForum() {
     function showLoginPrompt() {
         if (elements.forumContainer) {
             elements.forumContainer.querySelector('.content').innerHTML = `
-                <div class="login-prompt">
-                    <p>You must be signed in to view and participate in the forum.</p>
-                    <button class="signin-prompt-btn">Sign In</button>
+                <div class="window">
+                    <div class="title-bar">
+                        <span class="title-text">Forum</span>
+                    </div>
+                    <div class="content">
+                        <div class="login-prompt">
+                            <p>You must be signed in to view and participate in the forum.</p>
+                            <button class="signin-prompt-btn">Sign In</button>
+                        </div>
+                    </div>
                 </div>
             `;
             
@@ -257,6 +290,9 @@ function initForum() {
                 // Show forum content after successful login
                 showForumContent();
                 loadPosts();
+                
+                // Check admin status after login
+                setTimeout(checkAdminStatus, 500);
             });
         }
     }
@@ -276,6 +312,10 @@ function initForum() {
                     content.appendChild(navLinks);
                     content.appendChild(postFormContainer);
                     content.innerHTML += `
+                        <div id="admin-controls" class="admin-panel" style="display: none;">
+                            <button id="admin-mode" class="admin-btn">Admin Mode</button>
+                            <button id="purge-posts" class="admin-btn">Purge All Posts</button>
+                        </div>
                         <div id="postsList" class="posts-list">
                             <div class="loading-message">Loading posts...</div>
                         </div>
@@ -283,7 +323,7 @@ function initForum() {
                 } else {
                     // If navigation and post form don't exist, just add the posts list
                     content.innerHTML = `
-                        <div class="navigation-links">
+                        <div class="navigation-links theme-border">
                             [<a href="index.html">back</a>] [<a href="forum.html">refresh</a>] [<a href="#" id="toggle-post-form">new post</a>]
                         </div>
                         <div class="post-form-window" style="display: none;">
@@ -297,6 +337,10 @@ function initForum() {
                                     </form>
                                 </div>
                             </div>
+                        </div>
+                        <div id="admin-controls" class="admin-panel" style="display: none;">
+                            <button id="admin-mode" class="admin-btn">Admin Mode</button>
+                            <button id="purge-posts" class="admin-btn">Purge All Posts</button>
                         </div>
                         <div id="postsList" class="posts-list">
                             <div class="loading-message">Loading posts...</div>
@@ -318,6 +362,16 @@ function initForum() {
                         }
                     });
                 }
+                
+                // Add purge button functionality
+                const purgeBtn = document.getElementById('purge-posts');
+                if (purgeBtn) {
+                    purgeBtn.addEventListener('click', confirmPurgeAllPosts);
+                    console.log('Purge button initialized');
+                }
+
+                // Show admin controls if the user is admin
+                checkAdminStatus();
             }
         }
     }
@@ -329,10 +383,18 @@ function initForum() {
         elements.postContent = document.getElementById('postContent');
         elements.postResponse = document.getElementById('post-response');
         elements.postsList = document.getElementById('postsList');
+        elements.adminControls = document.getElementById('admin-controls');
+        elements.adminModeBtn = document.getElementById('admin-mode');
         
         // Set up event listener for form submission
         if (elements.postForm) {
             elements.postForm.addEventListener('submit', handleThreadSubmission);
+        }
+        
+        // Set up admin mode button if it exists
+        if (elements.adminModeBtn) {
+            elements.adminModeBtn.addEventListener('click', toggleAdminMode);
+            console.log('Admin mode button re-initialized');
         }
     }
     
@@ -639,11 +701,21 @@ function initForum() {
                             // Add each thread to the list
                             postsCache.forEach(thread => {
                                 addThreadToList(thread);
-                            });
-                            
-                            // After adding all posts, set up reply forms
-                            document.querySelectorAll('.thread').forEach(thread => {
-                                setupReplyToggleAndForm(thread);
+                                
+                                // Add event listeners to reply delete buttons if in admin mode
+                                if (adminMode) {
+                                    const threadElement = document.getElementById(`thread-${thread.id}`);
+                                    if (threadElement) {
+                                        const deleteButtons = threadElement.querySelectorAll('.delete-reply-btn');
+                                        deleteButtons.forEach(btn => {
+                                            btn.addEventListener('click', () => {
+                                                const threadId = btn.getAttribute('data-thread-id');
+                                                const replyId = btn.getAttribute('data-reply-id');
+                                                deleteReply(threadId, replyId);
+                                            });
+                                        });
+                                    }
+                                }
                             });
                         }
                     }
@@ -744,6 +816,7 @@ function initForum() {
         const threadElement = document.createElement('div');
         threadElement.className = 'thread';
         threadElement.setAttribute('id', `thread-${thread.id}`);
+        threadElement.setAttribute('data-thread-id', thread.id);
         
         // Format timestamp
         const formattedDate = formatTimestamp(thread.timestamp);
@@ -766,7 +839,7 @@ function initForum() {
             </div>
             ${thread.replies && thread.replies.length > 0 ? `
                 <div class="replies-container" data-thread-id="${thread.id}">
-                    ${thread.replies.map(reply => generateReplyHtml(reply)).join('')}
+                    ${thread.replies.map(reply => generateReplyHtml(reply, thread.id)).join('')}
                 </div>
             ` : '<div class="replies-container" data-thread-id="' + thread.id + '"></div>'}
             
@@ -789,6 +862,12 @@ function initForum() {
             </form>
         `;
         
+        // Add the thread to the posts list
+        elements.postsList.appendChild(threadElement);
+        
+        // Now that the element is in the DOM, add event listeners
+        setupReplyToggleAndForm(threadElement);
+        
         // Add admin controls if admin mode is enabled
         if (adminMode) {
             const deleteBtn = threadElement.querySelector('.delete-thread-btn');
@@ -800,12 +879,6 @@ function initForum() {
                 });
             }
         }
-        
-        // Add the thread to the posts list
-        elements.postsList.appendChild(threadElement);
-        
-        // Now that the element is in the DOM, add event listeners
-        setupReplyToggleAndForm(threadElement);
     }
 
     // Setup reply form functionality
@@ -852,7 +925,7 @@ function initForum() {
     }
 
     // Generate HTML for a reply
-    function generateReplyHtml(reply) {
+    function generateReplyHtml(reply, threadId) {
         // Format timestamp
         const formattedDate = formatTimestamp(reply.timestamp);
         
@@ -866,6 +939,7 @@ function initForum() {
             <div class="reply" id="reply-${reply.id}">
                 <div class="post-header">
                     <span class="post-username">${escapeHTML(reply.username)}</span> ${formattedDate}
+                    ${adminMode ? `<button class="delete-reply-btn" data-thread-id="${threadId}" data-reply-id="${reply.id}">Delete Reply</button>` : ''}
                 </div>
                 <div class="post-content">
                     ${imageHtml}${processedContent}
@@ -874,7 +948,69 @@ function initForum() {
         `;
     }
     
-    // Add a reply to a thread
+    // Function to delete a reply
+    async function deleteReply(threadId, replyId) {
+        // Verify user is admin
+        const username = localStorage.getItem('username');
+        if (username !== 'admin') {
+            console.error('Unauthorized delete attempt');
+            alert('Only admin can delete replies');
+            return;
+        }
+        
+        if (!confirm('Are you sure you want to delete this reply? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('You must be logged in as admin to delete replies');
+                return;
+            }
+            
+            console.log(`Deleting reply: ${replyId} from thread: ${threadId}`);
+            
+            const deleteUrl = `${API_URL}/api/forum/posts/${threadId}/replies/${replyId}`;
+            console.log(`Sending DELETE request to: ${deleteUrl}`);
+            
+            const response = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            console.log(`Delete response status: ${response.status}`);
+            
+            if (response.ok) {
+                // Remove reply from UI
+                const replyElement = document.getElementById(`reply-${replyId}`);
+                if (replyElement) {
+                    replyElement.remove();
+                }
+                
+                // Update cache
+                const threadIndex = postsCache.findIndex(post => post.id === threadId);
+                if (threadIndex !== -1) {
+                    postsCache[threadIndex].replies = postsCache[threadIndex].replies.filter(reply => reply.id !== replyId);
+                }
+                
+                console.log(`Reply ${replyId} deleted successfully`);
+                alert('Reply deleted successfully');
+            } else {
+                const errorData = await response.json();
+                alert(`Error deleting reply: ${errorData.error || 'Unknown error'}`);
+                console.error('Error deleting reply:', errorData);
+            }
+        } catch (error) {
+            alert(`Error deleting reply: ${error.message}`);
+            console.error('Error deleting reply:', error);
+        }
+    }
+
+    // Function to add a reply to a thread
     function addReplyToThread(repliesContainer, reply) {
         // Update reply count header
         const repliesHeader = repliesContainer.querySelector('.replies-header');
@@ -888,21 +1024,37 @@ function initForum() {
             repliesHeader.textContent = `${newCount} ${newCount === 1 ? 'Reply' : 'Replies'}`;
         }
         
+        // Get the thread ID from the container
+        const threadId = repliesContainer.getAttribute('data-thread-id');
+        
         // Create reply element from the HTML
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = generateReplyHtml(reply);
+        tempDiv.innerHTML = generateReplyHtml(reply, threadId);
         const replyElement = tempDiv.firstElementChild;
+        
+        // Add event listener for delete button if in admin mode
+        if (adminMode) {
+            const deleteBtn = replyElement.querySelector('.delete-reply-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    const threadId = deleteBtn.getAttribute('data-thread-id');
+                    const replyId = deleteBtn.getAttribute('data-reply-id');
+                    deleteReply(threadId, replyId);
+                });
+            }
+        }
         
         // Append to the end of the replies container
         repliesContainer.appendChild(replyElement);
     }
-    
+
     // Function to delete a thread (admin only)
     async function deleteThread(threadId) {
         // Verify user is admin
         const username = localStorage.getItem('username');
         if (username !== 'admin') {
             console.error('Unauthorized delete attempt');
+            alert('Only admin can delete threads');
             return;
         }
         
@@ -942,7 +1094,7 @@ function initForum() {
                 
                 if (response.ok) {
                     // Remove thread from UI
-                    const threadElement = document.querySelector(`.thread[data-thread-id="${threadId}"]`);
+                    const threadElement = document.getElementById(`thread-${threadId}`);
                     if (threadElement) {
                         threadElement.remove();
                     }

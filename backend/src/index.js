@@ -199,41 +199,45 @@ export default {
 			return handleValidate(request, env);
 		}
 
-		// Forum API endpoints - support both /threads and /posts paths
-		if ((path === '/api/forum/threads' || path === '/api/forum/posts') && request.method === 'GET') {
-			return handleGetThreads(request, env);
+		// Forum endpoints
+		if (path.startsWith('/api/forum/posts')) {
+			const forumId = env.FORUM.idFromName('forum-data');
+			const forum = env.FORUM.get(forumId);
+			
+			// Extract thread ID from URL if present
+			const matches = path.match(/\/api\/forum\/posts\/([^\/]+)(?:\/replies\/([^\/]+))?/);
+			const threadId = matches?.[1];
+			const replyId = matches?.[2];
+			
+			if (request.method === 'GET') {
+				return handleGetThreads(request, env);
+			}
+			
+			if (request.method === 'POST') {
+				if (threadId) {
+					return handleCreateReply(request, env, threadId);
+				}
+				return handleCreateThread(request, env);
+			}
+			
+			if (request.method === 'DELETE') {
+				if (threadId && replyId) {
+					// Forward the request to the forum object for reply deletion
+					const url = new URL(request.url);
+					return forum.fetch(url.toString(), {
+						method: 'DELETE',
+						headers: request.headers
+					});
+				}
+				if (path === '/api/forum/posts/purge') {
+					return handlePurgeAllThreads(request, env);
+				}
+				if (threadId) {
+					return handleDeleteThread(request, env, threadId);
+				}
+			}
 		}
 
-		if ((path === '/api/forum/threads' || path === '/api/forum/posts') && request.method === 'POST') {
-			return handleCreateThread(request, env);
-		}
-		
-		// Admin endpoint to delete a thread - support both /threads and /posts paths
-		const threadDeleteMatch = path.match(/^\/api\/forum\/threads\/([^\/]+)$/);
-		const postDeleteMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)$/);
-		
-		if ((threadDeleteMatch || postDeleteMatch) && request.method === 'DELETE') {
-			const threadId = threadDeleteMatch ? threadDeleteMatch[1] : postDeleteMatch[1];
-			console.log(`DELETE request for thread ID: ${threadId}`);
-			return handleDeleteThread(request, env, threadId);
-		}
-		
-		// Admin endpoint to purge all threads - support both /threads and /posts paths
-		if ((path === '/api/forum/threads/purge' || path === '/api/forum/posts/purge') && request.method === 'DELETE') {
-			return handlePurgeAllThreads(request, env);
-		}
-
-		// Handle replies to threads - support both /threads and /posts paths
-		const threadReplyMatch = path.match(/^\/api\/forum\/threads\/([^\/]+)\/replies$/);
-		const postReplyMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)\/replies$/);
-		
-		if ((threadReplyMatch || postReplyMatch) && request.method === 'POST') {
-			const threadId = threadReplyMatch ? threadReplyMatch[1] : postReplyMatch[1];
-			return handleCreateReply(request, env, threadId);
-		}
-
-		console.log(`No handler matched for path: ${path}, method: ${request.method}`);
-		// Default response for unhandled routes
 		return jsonResponse({ error: 'Not found' }, 404, request);
 	}
 };
@@ -549,6 +553,20 @@ async function handlePurgeAllThreads(request, env) {
 	}
 }
 
+// Add this new handler function
+async function handleDeleteReply(request, env, threadId, replyId) {
+	const forumId = env.FORUM.idFromName('forum');
+	const forum = env.FORUM.get(forumId);
+	
+	const url = new URL(request.url);
+	url.pathname = `/api/forum/posts/${threadId}/replies/${replyId}`;
+	
+	return forum.fetch(url.toString(), {
+		method: 'DELETE',
+		headers: request.headers
+	});
+}
+
 // Define the User Durable Object class
 export class UsersObject extends DurableObject {
 	constructor(state, env) {
@@ -811,29 +829,38 @@ export class ForumObject extends DurableObject {
 			}
 		}
 		
-		// Admin-only endpoint to purge all threads
-		if ((path === '/threads/purge' || path.endsWith('/threads/purge')) && request.method === 'DELETE') {
-			return this.purgeAllThreads(request);
-		}
-		
 		// Handle deleting a specific thread (admin only)
-		const deleteMatch = path.match(/^\/threads\/([^\/]+)$/);
+		const deleteMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)$/);
 		if (deleteMatch && request.method === 'DELETE') {
 			const threadId = deleteMatch[1];
 			console.log(`ForumObject handling delete for thread ID: ${threadId}`);
 			return this.deleteThread(request, threadId);
 		}
 		
-		// Handle replies to threads
-		const replyMatch = path.match(/^\/threads\/([^\/]+)\/replies$/);
-		if (replyMatch && request.method === 'POST') {
+		// Handle deleting a reply
+		const replyMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)\/replies\/([^\/]+)$/);
+		if (replyMatch && request.method === 'DELETE') {
 			const threadId = replyMatch[1];
+			const replyId = replyMatch[2];
+			console.log(`ForumObject handling delete for reply ID: ${replyId} in thread: ${threadId}`);
+			return this.deleteReply(request, threadId, replyId);
+		}
+		
+		// Handle replies to threads
+		const createReplyMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)\/replies$/);
+		if (createReplyMatch && request.method === 'POST') {
+			const threadId = createReplyMatch[1];
 			return this.createReply(request, threadId);
 		}
 		
 		// Handle session storage
 		if (path === '/store-session' || path.endsWith('/store-session')) {
 			return this.storeSessionRequest(request);
+		}
+		
+		// Admin-only endpoint to purge all threads
+		if ((path === '/api/forum/posts/purge' || path.endsWith('/posts/purge')) && request.method === 'DELETE') {
+			return this.purgeAllThreads(request);
 		}
 		
 		console.log(`ForumObject: No handler matched for path: ${path}, method: ${request.method}`);
@@ -1097,6 +1124,50 @@ export class ForumObject extends DurableObject {
 		return this.corsResponse({ 
 			success: true,
 			message: 'All threads purged successfully'
+		}, 200, request);
+	}
+
+	// Delete a reply from a thread (admin only)
+	async deleteReply(request, threadId, replyId) {
+		console.log(`Attempting to delete reply ${replyId} from thread ${threadId}`);
+		
+		const username = await this.validateToken(request);
+		if (!username) {
+			return this.corsResponse({ error: 'Authentication required' }, 401, request);
+		}
+		
+		// Check if user is an admin
+		if (username !== 'admin') {
+			return this.corsResponse({ error: 'Admin privileges required' }, 403, request);
+		}
+		
+		// Get existing threads
+		const threads = await this.state.storage.get("threads") || [];
+		
+		// Find the thread
+		const threadIndex = threads.findIndex(t => t.id === threadId);
+		if (threadIndex === -1) {
+			console.log(`Thread ${threadId} not found`);
+			return this.corsResponse({ error: 'Thread not found' }, 404, request);
+		}
+		
+		// Find the reply
+		const replyIndex = threads[threadIndex].replies.findIndex(r => r.id === replyId);
+		if (replyIndex === -1) {
+			console.log(`Reply ${replyId} not found in thread ${threadId}`);
+			return this.corsResponse({ error: 'Reply not found' }, 404, request);
+		}
+		
+		// Remove the reply
+		threads[threadIndex].replies.splice(replyIndex, 1);
+		
+		// Store updated threads
+		await this.state.storage.put("threads", threads);
+		
+		console.log(`Successfully deleted reply ${replyId} from thread ${threadId}`);
+		return this.corsResponse({ 
+			success: true,
+			message: 'Reply deleted successfully'
 		}, 200, request);
 	}
 }

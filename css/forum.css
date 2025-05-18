@@ -432,7 +432,8 @@ body.light-theme .signin-prompt-btn {
   justify-content: flex-end;
 }
 
-.delete-thread-btn {
+.delete-thread-btn,
+.delete-reply-btn {
   padding: 4px 8px;
   background-color: #ff6b6b;
   color: white;
@@ -443,7 +444,8 @@ body.light-theme .signin-prompt-btn {
   margin-left: 10px;
 }
 
-.delete-thread-btn:hover {
+.delete-thread-btn:hover,
+.delete-reply-btn:hover {
   background-color: #fa5252;
 }
 

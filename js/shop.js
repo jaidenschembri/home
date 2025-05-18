@@ -95,10 +95,7 @@ function initShop() {
     function showLoginPrompt() {
         if (elements.shopContainer) {
             elements.shopContainer.querySelector('.content').innerHTML = `
-                <div class="login-prompt">
-                    <p>You must be signed in to view and shop in the store.</p>
-                    <button class="signin-prompt-btn">Sign In</button>
-                </div>
+                                <div class="login-prompt">                    <p>You must be signed in to view and participate in the shop.</p>                    <button class="signin-prompt-btn">Sign In</button>                </div>
             `;
             
             // Add event listener to the new sign in button
