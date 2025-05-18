@@ -37,7 +37,9 @@
         </div>
       </div>
       <div class="title-bar signin-title-bar">
-        <a href="forum.html" class="nav-link">Forum</a>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a><a href="forum.html" class="nav-link">Forum</a><a href="shop.html" class="nav-link">Shop</a>
+        </div>
         <button class="signin-btn">Sign in</button>
         <div class="signed-in-text" style="display: none;">Signed in as <span class="username"></span></div>
       </div>
@@ -82,15 +84,28 @@
             ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⠀⠀⠀⠀⣼⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
             ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠰⣿⣿⣿⠀⠀⠀⢀⣿⣿⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
             ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⡆⠀⠀⣾⣿⣿⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣷⠀⠀⠸⣿⣿⣿⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⣿⣿⣻⡇⠀⠀⠈⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+            ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⣿⣿⣷⠀⠀⠸⣿⣿⣿⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
           </pre>
+          <!-- Commented out animated ASCII art (temporarily hidden)
+          <pre id="ascii-art"></pre>
+          <script>
+          fetch('ascii_frames.json')
+            .then(r => r.json())
+            .then(frames => {
+              let i = 0;
+              setInterval(() => {
+                document.getElementById('ascii-art').textContent = frames[i];
+                i = (i + 1) % frames.length;
+              }, 70); // 70ms = ~14fps, tweak as you like
+            });
+          </script>
+          -->
         </main>
       </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="js/script.js"></script>
 
   <!-- Modal overlay for auth modal -->
   <div id="auth-modal-overlay" class="modal-overlay"></div>

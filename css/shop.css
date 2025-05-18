@@ -1,0 +1,229 @@
+/* Shop page specific styles */
+
+/* Override all responsive vertical positioning to match forum */
+.page {
+  padding-top: 70px !important; /* Fixed padding for all screen sizes */
+}
+
+/* Consistent shop container positioning */
+.shop-container {
+  margin-top: 20px !important; /* Fixed margin for all screen sizes */
+  position: relative;
+  max-width: 800px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Important overrides for any screen size */
+@media screen and (max-width: 1000px) {
+  .page {
+    padding-top: 70px !important;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .page {
+    padding-top: 70px !important;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .page {
+    padding-top: 70px !important;
+  }
+}
+
+/* Keep basic header fix */
+@media (max-width: 768px) {
+  .header-window {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+  }
+}
+
+/* Navigation */
+.navigation-links {
+  padding: 5px 10px;
+  margin-bottom: 20px;
+  background-color: var(--window-bg);
+  box-shadow: 0 0 0 1px var(--color-fg);
+  display: inline-block;
+  width: auto;
+  border-radius: 2px;
+}
+
+/* Theme-dependent border */
+.theme-border {
+  border: 1px solid var(--color-fg) !important;
+  box-shadow: none !important;
+}
+
+.navigation-links a {
+  color: var(--text-color);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.navigation-links a:hover {
+  text-decoration: underline;
+}
+
+/* Loading message */
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+}
+
+.loading-message.error {
+  color: #ff6b6b;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
+}
+
+/* Login prompt */
+.login-prompt {
+  text-align: center;
+  padding: 20px;
+  font-family: var(--base-font);
+}
+
+.login-prompt p {
+  margin-bottom: 15px;
+  color: var(--text-secondary);
+  font-family: var(--base-font);
+}
+
+.signin-prompt-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-family: var(--base-font);
+  font-size: 14px;
+}
+
+.signin-prompt-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Shop items grid */
+.shop-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 10px;
+}
+
+/* Shop item card */
+.shop-item {
+  border: 1px solid var(--color-fg);
+  overflow: hidden;
+  background-color: var(--window-bg);
+}
+
+.shop-item:hover {
+  transform: translateY(-5px);
+}
+
+.shop-item-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+
+.shop-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.shop-item:hover .shop-item-image img {
+  transform: scale(1.05);
+}
+
+.shop-item-details {
+  padding: 15px;
+}
+
+.shop-item-name {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: var(--text-color);
+  font-weight: bold;
+  font-family: var(--base-font);
+}
+
+.shop-item-description {
+  margin: 0 0 15px 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  font-family: var(--base-font);
+}
+
+.shop-item-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--accent-color);
+  margin-bottom: 15px;
+  font-family: var(--base-font);
+}
+
+.add-to-cart-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  border: 1px solid var(--color-fg);
+  cursor: pointer;
+  font-family: var(--base-font);
+  font-size: 14px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .shop-items {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-items {
+    grid-template-columns: 1fr;
+  }
+  
+  .shop-item-image {
+    height: 150px;
+  }
+}
+
+/* Add rules for the cart icon */
+.cart-icon {
+  fill: #ffffff;
+  vertical-align: middle;
+  transition: fill 0.3s ease;
+}
+
+body.light-theme .cart-icon {
+  fill: #000000;
+}
+
+/* Hover effect */
+#cart-icon:hover .cart-icon {
+  opacity: 0.8;
+} 

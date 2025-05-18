@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <link rel="icon" href="images/icons/deer.gif" type="image/x-icon">
-  <title>Forum - Jaiden</title>
+  <title>Shop - Jaiden</title>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/mobile.css">
   <link rel="stylesheet" href="css/auth.css">
-  <link rel="stylesheet" href="css/forum.css">
+  <link rel="stylesheet" href="css/shop.css">
 </head>
 <body>
   <canvas id="space-bg"></canvas>
@@ -17,7 +17,7 @@
   <div class="page">
     <header class="header-window">
       <div class="title-bar">
-        <span class="title-text">Forum</span>
+        <span class="title-text">Shop</span>
         <div id="theme-toggle" title="Toggle Theme">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20">
             <g class="sun-moon dark" id="toggleIcon">
@@ -46,50 +46,30 @@
       </div>
     </header>
 
-    <div class="window forum-container">
+    <div class="window shop-container">
       <div class="title-bar">
-        <span class="title-text">Forum</span>
+        <span class="title-text">Shop</span>
       </div>
       <div class="content">
         <div class="navigation-links theme-border">
-          [<a href="index.html">back</a>] [<a href="forum.html">refresh</a>] [<a href="#" id="toggle-post-form">new post</a>]
-        </div>
-
-        <!-- Post Form Container (hidden by default) -->
-        <div class="post-form-window" style="display: none;">
-          <div class="content">
-            <div class="post-form-container">
-              <form id="postForm">
-                <input type="text" id="threadSubject" placeholder="Subject (optional)" maxlength="100">
-                <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
-                <div class="image-upload-container">
-                  <label for="postImage" class="image-upload-label">
-                    Add image
-                  </label>
-                  <input type="file" id="postImage" class="image-upload-input" accept="image/*">
-                  <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
-                    <img id="imagePreview" class="image-preview">
-                    <button type="button" id="removeImage" class="remove-image-btn">✕</button>
-                  </div>
-                </div>
-                <button type="submit" class="post-btn">Submit Post</button>
-                <div id="post-response" class="post-response"></div>
-              </form>
-            </div>
-          </div>
+          [<a href="index.html">back</a>] [<a href="#" id="cart-icon" title="Shopping Cart">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" class="cart-icon">
+              <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 3h2l3.6 7.6L5.3 12c-.1.3-.3.7-.3 1 0 1.1.9 2 2 2h12v-2H7.4c-.1 0-.2-.1-.2-.2v-.1l.9-1.7h7.4c.7 0 1.4-.4 1.7-1l3.6-6.5c.2-.3.2-.6.1-.9-.1-.3-.5-.6-.9-.6H5.2L4.3 2H1v1zm16 15c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+          </a>]
         </div>
         
-        <!-- Posts container -->
-        <div id="postsList" class="posts-list">
-          <!-- Posts will be loaded here -->
-          <div class="loading-message">Loading posts...</div>
+        <!-- Shop content -->
+        <div id="shopContent" class="shop-content">
+          <!-- Shop items will be loaded here -->
+          <div class="loading-message">Loading shop items...</div>
         </div>
       </div>
     </div>
   </div>
 
   <script src="js/script.js"></script>
-  <script src="js/forum.js"></script>
+  <script src="js/shop.js"></script>
 
   <!-- Modal overlay for auth modal -->
   <div id="auth-modal-overlay" class="modal-overlay"></div>

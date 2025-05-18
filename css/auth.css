@@ -81,10 +81,18 @@
   font-family: var(--base-font);
 }
 
+/* Nav container */
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
 /* Nav Link - re-enable pointer events */
 .nav-link {
   pointer-events: auto;
   text-decoration: none;
+  margin-right: 10px;
+  display: inline-block;
 }
 
 /* Remove hover effects from nav links */
