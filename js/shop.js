@@ -145,10 +145,10 @@ function initShop() {
             // Update elements reference after DOM change
             elements.shopContent = document.getElementById('shopContent');
             
-            // Ensure the navigation links are visible
+            // Ensure the navigation links are visible with correct display setting
             const navLinks = elements.shopContainer.querySelector('.navigation-links');
             if (navLinks) {
-                navLinks.style.display = 'block';
+                navLinks.style.display = 'inline-block';
             }
             
             // Make sure the shop content container is visible

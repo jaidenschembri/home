@@ -1,4 +1,4 @@
-/* === MOBILE VARIABLES === */
+/* Mobile Variables */
 :root {
   --mobile-breakpoint-tablet: 1000px;
   --mobile-breakpoint-phone: 600px;
@@ -11,10 +11,9 @@
   --mobile-content-padding-phone: 8px;
 }
 
-/* === MOBILE STYLES === */
-
-/* Small tablets and large phones */
+/* Tablet Devices (max-width: 1000px) */
 @media screen and (max-width: 1000px) {
+  /* Layout */
   body {
     min-width: auto;
     padding: var(--mobile-body-padding-tablet);
@@ -25,17 +24,40 @@
     padding-top: var(--mobile-page-padding-top-tablet);
   }
   
-  /* ASCII art responsiveness */
+  /* ASCII Art */
   .ascii pre {
     font-size: 10px !important;
     transform: scale(0.95);
     transform-origin: center top;
     padding-top: 40px;
   }
+  
+  /* Forum */
+  .page {
+    padding-top: 70px !important;
+  }
 }
 
-/* Phones */
+/* Medium Devices (max-width: 768px) */
+@media (max-width: 768px) {
+  /* Fixed Header */
+  .header-window {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+  }
+  
+  /* Shop */
+  .shop-items {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+/* Phones (max-width: 600px) */
 @media screen and (max-width: 600px) {
+  /* Layout */
   body {
     padding: var(--mobile-body-padding-phone);
   }
@@ -48,16 +70,40 @@
     padding: var(--mobile-content-padding-phone);
   }
   
-  /* Smaller ASCII art for phones */
+  /* ASCII Art */
   .ascii pre {
     font-size: 8px !important;
     transform: scale(0.85);
     padding-top: 15px;
   }
+  
+  /* Forum Images */
+  .image-preview {
+    max-width: 150px;
+    max-height: 150px;
+  }
+  
+  .post-image {
+    max-width: 150px;
+    max-height: 150px;
+  }
 }
 
-/* Very small phones */
+/* Small Phones (max-width: 480px) */
+@media (max-width: 480px) {
+  /* Shop */
+  .shop-items {
+    grid-template-columns: 1fr;
+  }
+  
+  .shop-item-image {
+    height: 150px;
+  }
+}
+
+/* Very Small Phones (max-width: 400px) */
 @media screen and (max-width: 400px) {
+  /* Layout */
   .page {
     width: 100%;
     padding-top: 25px;
@@ -75,7 +121,7 @@
     padding: 5px;
   }
   
-  /* Smallest ASCII art size */
+  /* ASCII Art */
   .ascii pre {
     font-size: 6px !important;
     transform: scale(0.75);

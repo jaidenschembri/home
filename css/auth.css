@@ -1,4 +1,8 @@
-/* Auth Modal Styles */
+/* ==================== 
+   AUTH MODAL STRUCTURE
+   ==================== */
+
+/* Modal Container */
 #auth-modal {
   display: none;
   position: fixed;
@@ -13,6 +17,7 @@
   padding: 0;
 }
 
+/* Title Bar */
 #auth-modal .title-bar {
   justify-content: space-between;
   background: var(--modal-title-bg);
@@ -27,6 +32,7 @@
   cursor: pointer;
 }
 
+/* Modal Content */
 #auth-modal .content {
   height: 370px;
   min-height: 370px;
@@ -35,18 +41,34 @@
   justify-content: center;
 }
 
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 199;
+  display: none;
+}
+
+/* ==================== 
+   AUTH FORMS & INPUTS
+   ==================== */
+
+/* Form Layout */
 #loginForm, #registerForm {
   margin-top: 16px;
   display: flex;
   flex-direction: column;
 }
 
+/* Form Links */
 #show-register-link, #show-login-link {
   margin-top: 10px;
   font-size: 13px;
   text-align: center;
 }
 
+/* Response Messages */
 #auth-response {
   margin: 10px 0;
   padding: 8px;
@@ -58,74 +80,7 @@
   white-space: pre-wrap;
 }
 
-/* Sign In Button */
-.signin-title-bar {
-  justify-content: space-between;
-  padding-right: 0px;
-  pointer-events: none;
-  border: none;
-  border-bottom: none;
-}
-
-.signin-btn {
-  background: none;
-  border: none;
-  color: var(--signin-btn-fg);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 6px 18px;
-  margin-top: 0;
-  border-radius: var(--signin-btn-radius);
-  transition: background 0.2s, color 0.2s;
-  pointer-events: auto;
-  font-family: var(--base-font);
-}
-
-/* Nav container */
-.nav-links {
-  display: flex;
-  align-items: center;
-}
-
-/* Nav Link - re-enable pointer events */
-.nav-link {
-  pointer-events: auto;
-  text-decoration: none;
-  margin-right: 10px;
-  display: inline-block;
-}
-
-/* Remove hover effects from nav links */
-.nav-link:hover {
-  text-decoration: none;
-  opacity: 1;
-}
-
-/* Signed In Text */
-.signed-in-text {
-  color: var(--signin-btn-fg);
-  font-size: 12px;
-  padding: 6px 18px;
-  margin-top: 0;
-  font-family: var(--base-font);
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.signed-in-text .username {
-  font-style: italic;
-}
-
-/* Modal overlay */
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 199;
-  display: none;
-}
-
-/* Auth Modal Input Styles */
+/* Input Fields */
 #auth-modal .content input {
   width: 300px;
   margin-left: auto;
@@ -146,6 +101,14 @@
   font-style: italic;
 }
 
+/* Input Focus */
+input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: inherit !important;
+}
+
+/* Form Buttons */
 #auth-modal .content button {
   background: none;
   color: var(--modal-input-fg);
@@ -157,7 +120,7 @@
   transition: background 0.2s, color 0.2s;
 }
 
-/* Auth Button Styles */
+/* Text Button Styles */
 .auth-text-btn {
   display: inline !important;
   align-self: center !important;
@@ -189,14 +152,72 @@
   margin: 0 !important;
 }
 
-/* Input Focus Styles */
-input:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  border-color: inherit !important;
+/* ==================== 
+   HEADER NAV COMPONENTS
+   ==================== */
+
+/* Sign In Button */
+.signin-title-bar {
+  justify-content: space-between;
+  padding-right: 0px;
+  pointer-events: none;
+  border: none;
+  border-bottom: none;
 }
 
-/* Autofill Styles */
+.signin-btn {
+  background: none;
+  border: none;
+  color: var(--signin-btn-fg);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 6px 18px;
+  margin-top: 0;
+  border-radius: var(--signin-btn-radius);
+  transition: background 0.2s, color 0.2s;
+  pointer-events: auto;
+  font-family: var(--base-font);
+}
+
+/* Nav Container */
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+/* Nav Links */
+.nav-link {
+  pointer-events: auto;
+  text-decoration: none;
+  margin-right: 10px;
+  display: inline-block;
+}
+
+.nav-link:hover {
+  text-decoration: none;
+  opacity: 1;
+}
+
+/* Signed In Text */
+.signed-in-text {
+  color: var(--signin-btn-fg);
+  font-size: 12px;
+  padding: 6px 18px;
+  margin-top: 0;
+  font-family: var(--base-font);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.signed-in-text .username {
+  font-style: italic;
+}
+
+/* ==================== 
+   AUTOFILL OVERRIDES
+   ==================== */
+
+/* Chrome Autofill */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -260,7 +281,11 @@ body.light-theme input:autofill:focus {
   }
 }
 
-/* Credential Suggestion Styles */
+/* ==================== 
+   CREDENTIAL SUGGESTIONS
+   ==================== */
+
+/* Hide credential autofill buttons */
 input:-webkit-credentials-auto-fill-button {
   visibility: hidden;
   pointer-events: none;
@@ -272,6 +297,7 @@ input::-webkit-credentials-auto-fill-button {
   visibility: hidden;
 }
 
+/* Font consistency for autofill */
 input:-internal-autofill-selected,
 input:-internal-autofill-previewed {
   font-family: var(--base-font) !important;
@@ -290,7 +316,7 @@ input:-webkit-autofill-selected {
   font-family: var(--base-font) !important;
 }
 
-/* Browser-specific Input Styles */
+/* Browser-specific input component styling */
 ::-webkit-input-placeholder,
 ::placeholder,
 ::-webkit-datetime-edit,

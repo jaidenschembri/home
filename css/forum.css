@@ -1,6 +1,6 @@
 /* Forum page specific styles */
 
-/* Forum containers */
+/* Container elements */
 .post-form-window, 
 .forum-container {
   margin-top: 20px;
@@ -9,18 +9,26 @@
   margin-bottom: 20px;
 }
 
-/* Make sure the form fits nicely at the top */
 .post-form-window {
   margin-bottom: 20px;
   background-color: var(--window-bg);
   border: 1px solid var(--border-color);
 }
 
-/* Post form */
 .post-form-container {
   padding: 15px;
 }
 
+.posts-list {
+  width: 100%;
+  background-color: var(--window-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-family: var(--base-font);
+  padding: 0;
+}
+
+/* Form inputs */
 #threadSubject {
   margin-bottom: 10px;
   padding: 8px;
@@ -33,12 +41,12 @@
   box-sizing: border-box;
 }
 
-#postContent {
+#postContent,
+.reply-content {
   width: 100%;
-  min-height: 100px;
   padding: 10px;
   font-family: var(--base-font);
-  border: 1px solid var(--color-fg); /* Use color-fg for theme-responsive border */
+  border: 1px solid var(--border-color);
   background-color: var(--window-bg);
   color: var(--text-color);
   margin-bottom: 10px;
@@ -47,12 +55,24 @@
   border-radius: 2px;
 }
 
-#postContent:focus {
+#postContent {
+  min-height: 100px;
+}
+
+.reply-content {
+  min-height: 80px;
+  padding: 8px;
+}
+
+#postContent:focus,
+.reply-content:focus {
   outline: none;
 }
 
+/* Buttons */
 .post-btn,
-.reply-btn {
+.reply-btn,
+.signin-prompt-btn {
   padding: 8px 16px;
   background-color: var(--accent-color);
   color: white;
@@ -60,14 +80,24 @@
   cursor: pointer;
   font-family: var(--base-font);
   border-radius: 4px;
+}
+
+.post-btn,
+.reply-btn {
   align-self: flex-end;
 }
 
 .post-btn:hover,
-.reply-btn:hover {
+.reply-btn:hover,
+.signin-prompt-btn:hover {
   background-color: var(--accent-hover);
 }
 
+body.light-theme .signin-prompt-btn {
+  color: black;
+}
+
+/* Response messages */
 .post-response,
 .reply-response {
   margin-top: 10px;
@@ -75,7 +105,8 @@
 }
 
 .post-response.error,
-.reply-response.error {
+.reply-response.error,
+.loading-message.error {
   color: #ff6b6b;
 }
 
@@ -84,16 +115,7 @@
   color: #51cf66;
 }
 
-/* Forum feed */
-.posts-list {
-  width: 100%;
-  background-color: var(--window-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  font-family: var(--base-font);
-  padding: 0;
-}
-
+/* Thread styling */
 .thread {
   margin-bottom: 0;
   border-bottom: 1px solid var(--border-color);
@@ -105,7 +127,6 @@
   border-bottom: none;
 }
 
-/* Thread styling */
 .post-header {
   display: block;
   margin-bottom: 5px;
@@ -148,15 +169,6 @@
   font-family: var(--base-font);
 }
 
-/* Images in posts */
-.post-image {
-  display: block;
-  margin: 5px 0 10px 0;
-  max-width: 300px;
-  max-height: 300px;
-  border: none;
-}
-
 /* Replies */
 .replies-container {
   margin-left: 20px;
@@ -174,23 +186,38 @@
   border-bottom: none;
 }
 
+.reply-form {
+  background-color: var(--window-bg);
+  padding: 10px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.reply-form .image-upload-container {
+  margin-top: 5px;
+}
+
+.reply-form .image-preview {
+  max-width: 150px;
+  max-height: 150px;
+}
+
+/* Navigation elements */
 .back-link {
   margin-bottom: 10px;
   font-size: 13px;
 }
 
-/* Navigation links with box shadow instead of border */
 .navigation-links {
   padding: 5px 10px;
   margin-bottom: 10px;
   background-color: var(--window-bg);
-  box-shadow: 0 0 0 1px var(--border-color); /* Use box-shadow instead of border */
+  box-shadow: 0 0 0 1px var(--border-color);
   display: inline-block;
   width: auto;
   border-radius: 2px;
 }
 
-/* Theme-dependent border */
 .theme-border {
   border: 1px solid var(--color-fg) !important;
   box-shadow: none !important;
@@ -206,30 +233,6 @@
   text-decoration: underline;
 }
 
-/* Quotes in posts */
-.greentext {
-  color: #789922;
-}
-
-/* Loading message */
-.loading-message {
-  text-align: center;
-  padding: 20px;
-  color: var(--text-secondary);
-}
-
-.loading-message.error {
-  color: #ff6b6b;
-}
-
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 20px;
-  color: var(--text-secondary);
-}
-
-/* Navigation */
 .nav-link {
   color: var(--header-fg);
   font-size: 12px;
@@ -241,192 +244,20 @@
   text-decoration: underline;
 }
 
-/* Login prompt */
-.login-prompt {
-  text-align: center;
-  padding: 20px;
-  font-family: var(--base-font);
-}
-
-.login-prompt p {
-  margin-bottom: 15px;
-  color: var(--text-secondary);
-  font-family: var(--base-font);
-}
-
-.signin-prompt-btn {
-  padding: 8px 16px;
-  background-color: var(--accent-color);
-  color: white;
+/* Images */
+.post-image {
+  display: block;
+  margin: 5px 0 10px 0;
+  max-width: 300px;
+  max-height: 300px;
   border: none;
-  cursor: pointer;
-  font-family: var(--base-font);
-  border-radius: 4px;
 }
 
-/* Make signin button text black in light mode */
-body.light-theme .signin-prompt-btn {
-  color: black;
+.post-image:hover {
+  opacity: 0.9;
 }
 
-.signin-prompt-btn:hover {
-  background-color: var(--accent-hover);
-}
-
-/* Override all responsive vertical positioning to keep forum feed in same position */
-.page {
-  padding-top: 70px !important; /* Fixed padding for all screen sizes */
-}
-
-/* Consistent forum container positioning */
-.forum-container {
-  margin-top: 20px !important; /* Fixed margin for all screen sizes */
-  position: relative;
-}
-
-/* Important overrides for any screen size */
-@media screen and (max-width: 1000px) {
-  .page {
-    padding-top: 70px !important;
-  }
-}
-
-@media screen and (max-width: 600px) {
-  .page {
-    padding-top: 70px !important;
-  }
-}
-
-@media screen and (max-width: 400px) {
-  .page {
-    padding-top: 70px !important;
-  }
-}
-
-/* Keep basic header fix */
-@media (max-width: 768px) {
-  .header-window {
-    position: fixed;
-    width: 100%;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-  }
-}
-
-/* Debug tools */
-.debug-tools {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px dashed #ff6b6b;
-  border-radius: 4px;
-  background-color: rgba(255, 107, 107, 0.05);
-}
-
-.debug-header {
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #ff6b6b;
-}
-
-.debug-info {
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.debug-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.debug-btn {
-  padding: 5px 10px;
-  background-color: #ff6b6b;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.debug-btn:hover {
-  background-color: #fa5252;
-}
-
-.storage-mode {
-  font-size: 12px;
-  margin-left: auto;
-}
-
-/* Admin panel */
-.admin-panel {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid var(--border-color);
-  background-color: var(--window-bg);
-  border-radius: 4px;
-}
-
-.admin-panel h4 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  color: var(--accent-color);
-}
-
-.admin-btn {
-  padding: 6px 12px;
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 8px;
-  font-family: var(--base-font);
-}
-
-.admin-btn:hover {
-  background-color: var(--accent-hover);
-}
-
-.admin-btn.active {
-  background-color: #ff6b6b;
-}
-
-.admin-btn#purge-posts {
-  background-color: #ff6b6b;
-}
-
-.admin-btn#purge-posts:hover {
-  background-color: #fa5252;
-}
-
-/* Thread admin controls */
-.thread-admin-controls {
-  padding: 8px 12px;
-  border-top: 1px solid var(--border-color);
-  background-color: rgba(0, 0, 0, 0.05);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.delete-thread-btn {
-  padding: 4px 8px;
-  background-color: #ff6b6b;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.delete-thread-btn:hover {
-  background-color: #fa5252;
-}
-
-/* Image upload styles */
+/* Image upload */
 .image-upload-container {
   margin-bottom: 15px;
   display: flex;
@@ -450,12 +281,6 @@ body.light-theme .signin-prompt-btn {
 .image-upload-label:hover {
   background-color: var(--accent-hover);
 }
-
-/* Removed - no longer needed
-.upload-icon {
-  margin-right: 5px;
-}
-*/
 
 .image-upload-input {
   position: absolute;
@@ -504,64 +329,172 @@ body.light-theme .signin-prompt-btn {
   background-color: var(--accent-hover);
 }
 
-/* Reply form image upload */
-.reply-form .image-upload-container {
-  margin-top: 5px;
+/* Status messages */
+.greentext {
+  color: #789922;
 }
 
-.reply-form .image-preview {
-  max-width: 150px;
-  max-height: 150px;
+.loading-message,
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-secondary);
 }
 
-/* Post images in threads and replies */
-.post-image {
-  display: block;
-  margin: 5px 0 10px 0;
-  max-width: 300px;
-  max-height: 300px;
-  border: none;
-}
-
-.post-image:hover {
-  opacity: 0.9;
-}
-
-/* Reply form styling */
-.reply-form {
-  background-color: var(--window-bg);
-  padding: 10px;
-  margin-top: 10px;
-  border-top: 1px solid var(--border-color);
-}
-
-.reply-content {
-  width: 100%;
-  min-height: 80px;
-  padding: 8px;
+/* Login prompt */
+.login-prompt {
+  text-align: center;
+  padding: 20px;
   font-family: var(--base-font);
+}
+
+.login-prompt p {
+  margin-bottom: 15px;
+  color: var(--text-secondary);
+  font-family: var(--base-font);
+}
+
+/* Admin controls */
+.admin-panel {
+  margin-bottom: 20px;
+  padding: 15px;
   border: 1px solid var(--border-color);
   background-color: var(--window-bg);
-  color: var(--text-color);
+  border-radius: 4px;
+}
+
+.admin-panel h4 {
+  margin-top: 0;
   margin-bottom: 10px;
-  resize: vertical;
-  box-sizing: border-box;
-  border-radius: 2px;
+  color: var(--accent-color);
 }
 
-/* Focus state doesn't change the border */
-.reply-content:focus {
-  outline: none;
+.admin-btn {
+  padding: 6px 12px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 8px;
+  font-family: var(--base-font);
 }
 
-/* Light theme overrides for buttons to ensure visibility */
+.admin-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.admin-btn.active {
+  background-color: #ff6b6b;
+}
+
+.admin-btn#purge-posts {
+  background-color: #ff6b6b;
+}
+
+.admin-btn#purge-posts:hover {
+  background-color: #fa5252;
+}
+
+.thread-admin-controls {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.delete-thread-btn {
+  padding: 4px 8px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.delete-thread-btn:hover {
+  background-color: #fa5252;
+}
+
+/* Debug tools */
+.debug-tools {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px dashed #ff6b6b;
+  border-radius: 4px;
+  background-color: rgba(255, 107, 107, 0.05);
+}
+
+.debug-header {
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ff6b6b;
+}
+
+.debug-info {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.debug-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.debug-btn {
+  padding: 5px 10px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.debug-btn:hover {
+  background-color: #fa5252;
+}
+
+.storage-mode {
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* Light theme overrides */
 body.light-theme .image-upload-label,
 body.light-theme .reply-btn,
 body.light-theme .post-btn {
   color: black;
 }
 
-/* Mobile responsiveness for image uploads */
+/* Responsive layout */
+.page {
+  padding-top: 70px !important;
+}
+
+@media screen and (max-width: 1000px),
+       screen and (max-width: 600px),
+       screen and (max-width: 400px) {
+  .page {
+    padding-top: 70px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-window {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+  }
+}
+
 @media (max-width: 600px) {
   .image-preview {
     max-width: 150px;
