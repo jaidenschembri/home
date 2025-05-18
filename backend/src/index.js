@@ -912,8 +912,9 @@ export class ForumObject extends DurableObject {
 			return this.corsResponse({ error: 'Error parsing request data' }, 400, request);
 		}
 		
-		if (!content || content.trim() === '') {
-			return this.corsResponse({ error: 'Thread content is required' }, 400, request);
+		// Allow empty content if an image is provided
+		if ((!content || content.trim() === '') && !imageData) {
+			return this.corsResponse({ error: 'Thread content or image is required' }, 400, request);
 		}
 		
 		// Get existing threads
@@ -985,8 +986,9 @@ export class ForumObject extends DurableObject {
 			return this.corsResponse({ error: 'Error parsing request data' }, 400, request);
 		}
 		
-		if (!content || content.trim() === '') {
-			return this.corsResponse({ error: 'Reply content is required' }, 400, request);
+		// Allow empty content if an image is provided
+		if ((!content || content.trim() === '') && !imageData) {
+			return this.corsResponse({ error: 'Reply content or image is required' }, 400, request);
 		}
 		
 		// Get existing threads

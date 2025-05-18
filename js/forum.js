@@ -378,8 +378,11 @@ function initForum() {
                 // Use FormData for multipart/form-data (file upload)
                 const formData = new FormData();
                 formData.append('subject', subject);
-                formData.append('content', content);
+                // Send content as is (can be empty with just an image)
+                formData.append('content', content || '');
                 formData.append('image', imageFile);
+                
+                console.log('Sending image with content:', content || '[empty]');
                 
                 requestBody = formData;
                 // Don't set Content-Type header when using FormData - browser will set it with boundary
@@ -470,8 +473,15 @@ function initForum() {
         
         const replyForm = e.target;
         const threadId = replyForm.dataset.threadId;
-        const replyContent = replyForm.querySelector('.reply-content').value.trim();
-        const replyResponse = replyForm.querySelector('.reply-response');
+        const replyContent = replyForm.querySelector('.reply-content')?.value.trim() || '';
+        
+        // Get response element, create it if it doesn't exist
+        let replyResponse = replyForm.querySelector('.reply-response');
+        if (!replyResponse) {
+            replyResponse = document.createElement('div');
+            replyResponse.className = 'reply-response';
+            replyForm.appendChild(replyResponse);
+        }
         
         // Check if user is logged in
         const token = localStorage.getItem('authToken');
@@ -505,8 +515,11 @@ function initForum() {
             if (imageFile) {
                 // Use FormData for multipart/form-data (file upload)
                 const formData = new FormData();
-                formData.append('content', replyContent);
+                // Send content as is (can be empty with just an image)
+                formData.append('content', replyContent || '');
                 formData.append('image', imageFile);
+                
+                console.log('Sending image with content:', replyContent || '[empty]');
                 
                 requestBody = formData;
                 // Don't set Content-Type header when using FormData - browser will set it with boundary
@@ -561,13 +574,18 @@ function initForum() {
                     replyResponse.className = "post-response";
                 }, 3000);
             } else {
+                console.error('Reply submission error:', data);
                 replyResponse.textContent = data.error || "Failed to submit reply. Please try again.";
                 replyResponse.className = "post-response error";
+                
+                // No need for workarounds now that the backend accepts image-only posts
             }
         } catch (error) {
             console.error('Error submitting reply:', error);
-            replyResponse.textContent = `Error: ${error.message}`;
-            replyResponse.className = "post-response error";
+            if (replyResponse) {
+                replyResponse.textContent = `Error: ${error.message}`;
+                replyResponse.className = "post-response error";
+            }
         }
     }
     
