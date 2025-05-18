@@ -38,13 +38,17 @@
   min-height: 100px;
   padding: 10px;
   font-family: inherit;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-fg); /* Use color-fg for theme-responsive border */
   background-color: var(--window-bg);
   color: var(--text-color);
   margin-bottom: 10px;
   resize: vertical;
   box-sizing: border-box;
   border-radius: 2px;
+}
+
+#postContent:focus {
+  outline: none;
 }
 
 .post-btn,
@@ -80,19 +84,20 @@
   color: #51cf66;
 }
 
-/* 4chan-style forum feed */
+/* Forum feed */
 .posts-list {
   width: 100%;
   background-color: var(--window-bg);
   border: 1px solid var(--border-color);
   color: var(--text-color);
-  font-family: Arial, sans-serif;
+  font-family: inherit;
+  padding: 0;
 }
 
 .thread {
   margin-bottom: 0;
-  padding: 5px 0;
   border-bottom: 1px solid var(--border-color);
+  padding: 5px 0;
 }
 
 .thread:last-child {
@@ -104,48 +109,47 @@
   display: block;
   margin-bottom: 5px;
   font-size: 13px;
-  padding: 0;
+  padding: 5px;
   line-height: 1.4;
   background-color: transparent;
 }
 
 .post-username {
-  font-weight: normal;
+  font-weight: bold;
   color: var(--accent-color);
-  margin-right: 5px;
+  margin-right: 0;
 }
 
 .post-timestamp {
   color: var(--text-secondary);
   font-size: 12px;
   margin-right: 5px;
-}
-
-.post-id {
-  color: var(--text-secondary);
-  font-size: 12px;
+  margin-left: 5px;
 }
 
 .thread-subject {
   font-weight: bold;
   color: var(--accent-color);
-  margin-right: 5px;
+  display: block;
+  margin-top: 3px;
 }
 
 .post-content {
   white-space: pre-wrap;
   word-break: break-word;
-  padding: 0 5px 5px 5px;
+  padding: 0 10px 10px 10px;
   font-size: 13px;
   line-height: 1.4;
+  color: var(--text-color);
 }
 
 /* Images in posts */
 .post-image {
-  float: left;
-  margin: 0 15px 5px 5px;
-  max-width: 120px;
-  max-height: 120px;
+  display: block;
+  margin: 5px 0 10px 0;
+  max-width: 300px;
+  max-height: 300px;
+  border: none;
 }
 
 /* Replies */
@@ -170,12 +174,21 @@
   font-size: 13px;
 }
 
-/* Navigation links */
+/* Navigation links with box shadow instead of border */
 .navigation-links {
-  padding: 5px;
-  border: 1px solid var(--border-color);
+  padding: 5px 10px;
   margin-bottom: 10px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--window-bg);
+  box-shadow: 0 0 0 1px var(--border-color); /* Use box-shadow instead of border */
+  display: inline-block;
+  width: auto;
+  border-radius: 2px;
+}
+
+/* Theme-dependent border */
+.theme-border {
+  border: 1px solid var(--color-fg) !important;
+  box-shadow: none !important;
 }
 
 .navigation-links a {
@@ -190,17 +203,7 @@
 
 /* Quotes in posts */
 .greentext {
-  color: #89b024;
-}
-
-body.light-theme .greentext {
   color: #789922;
-}
-
-/* Maintain the 4chan-style even with theme changes */
-body.light-theme .navigation-links {
-  background-color: transparent;
-  border-color: var(--border-color);
 }
 
 /* Loading message */
@@ -254,42 +257,13 @@ body.light-theme .navigation-links {
   border-radius: 4px;
 }
 
+/* Make signin button text black in light mode */
+body.light-theme .signin-prompt-btn {
+  color: black;
+}
+
 .signin-prompt-btn:hover {
   background-color: var(--accent-hover);
-}
-
-/* Light theme overrides - not needed anymore since we're using theme variables */
-body.light-theme .posts-list {
-  background-color: var(--window-bg);
-  border-color: var(--border-color);
-  color: var(--text-color);
-}
-
-body.light-theme .thread {
-  border-bottom-color: var(--border-color);
-}
-
-body.light-theme .post-username {
-  color: var(--accent-color);
-}
-
-body.light-theme .post-timestamp,
-body.light-theme .post-id {
-  color: var(--text-secondary);
-}
-
-body.light-theme .thread-subject {
-  color: var(--accent-color);
-}
-
-body.light-theme .reply {
-  border-bottom-color: var(--border-color);
-}
-
-body.light-theme .loading-message,
-body.light-theme .empty-state,
-body.light-theme .login-prompt p {
-  color: var(--text-secondary);
 }
 
 /* Override all responsive vertical positioning to keep forum feed in same position */
@@ -443,4 +417,151 @@ body.light-theme .login-prompt p {
 
 .delete-thread-btn:hover {
   background-color: #fa5252;
+}
+
+/* Image upload styles */
+.image-upload-container {
+  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.image-upload-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--accent-color);
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.image-upload-label:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Removed - no longer needed
+.upload-icon {
+  margin-right: 5px;
+}
+*/
+
+.image-upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.image-preview-container {
+  margin-top: 10px;
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  padding: 0;
+}
+
+.remove-image-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Reply form image upload */
+.reply-form .image-upload-container {
+  margin-top: 5px;
+}
+
+.reply-form .image-preview {
+  max-width: 150px;
+  max-height: 150px;
+}
+
+/* Post images in threads and replies */
+.post-image {
+  display: block;
+  margin: 5px 0 10px 0;
+  max-width: 300px;
+  max-height: 300px;
+  border: none;
+}
+
+.post-image:hover {
+  opacity: 0.9;
+}
+
+/* Reply form styling */
+.reply-form {
+  background-color: var(--window-bg);
+  padding: 10px;
+  margin-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.reply-content {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  font-family: inherit;
+  border: 1px solid var(--color-fg); /* Use color-fg for theme-responsive border */
+  background-color: var(--window-bg);
+  color: var(--text-color);
+  margin-bottom: 8px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+/* Focus state doesn't change the border */
+.reply-content:focus {
+  outline: none;
+}
+
+/* Light theme overrides for buttons to ensure visibility */
+body.light-theme .image-upload-label,
+body.light-theme .reply-btn,
+body.light-theme .post-btn {
+  color: black;
+}
+
+/* Mobile responsiveness for image uploads */
+@media (max-width: 600px) {
+  .image-preview {
+    max-width: 150px;
+    max-height: 150px;
+  }
+  
+  .post-image {
+    max-width: 150px;
+    max-height: 150px;
+  }
 } 

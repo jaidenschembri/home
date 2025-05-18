@@ -383,14 +383,22 @@ async function handleCreateThread(request, env) {
 		const doURL = new URL(requestURL.origin);
 		doURL.pathname = "/threads";
 		
-		// Forward all headers and the body to the Durable Object
-		const headers = new Headers(request.headers);
+		// Clone the request with all headers and body to forward to the Durable Object
+		// We need to clone it because request bodies can only be read once
+		// Use a streaming clone to preserve multipart form data
+		const clonedBody = await request.clone().arrayBuffer();
+		
+		// Forward all headers from the original request
+		const headers = new Headers();
+		request.headers.forEach((value, key) => {
+			headers.set(key, value);
+		});
 		
 		// Call the createThread method on the Durable Object
 		const response = await forumObj.fetch(doURL.toString(), {
 			method: 'POST',
 			headers,
-			body: request.body
+			body: clonedBody
 		});
 		
 		return response;
@@ -418,14 +426,22 @@ async function handleCreateReply(request, env, threadId) {
 		const doURL = new URL(requestURL.origin);
 		doURL.pathname = `/threads/${threadId}/replies`;
 		
-		// Forward all headers and the body to the Durable Object
-		const headers = new Headers(request.headers);
+		// Clone the request with all headers and body to forward to the Durable Object
+		// We need to clone it because request bodies can only be read once
+		// Use a streaming clone to preserve multipart form data
+		const clonedBody = await request.clone().arrayBuffer();
+		
+		// Forward all headers from the original request
+		const headers = new Headers();
+		request.headers.forEach((value, key) => {
+			headers.set(key, value);
+		});
 		
 		// Call the createReply method on the Durable Object
 		const response = await forumObj.fetch(doURL.toString(), {
 			method: 'POST',
 			headers,
-			body: request.body
+			body: clonedBody
 		});
 		
 		return response;
@@ -858,8 +874,43 @@ export class ForumObject extends DurableObject {
 			return this.corsResponse({ error: 'Authentication required' }, 401, request);
 		}
 		
-		// Parse the request body
-		const { subject, content } = await request.json();
+		// Check if we have a multipart form-data request (with image)
+		const contentType = request.headers.get('Content-Type') || '';
+		let subject = '';
+		let content = '';
+		let imageData = null;
+		
+		try {
+			if (contentType.includes('multipart/form-data')) {
+				// Handle multipart form data with image attachment
+				const formData = await request.formData();
+				subject = formData.get('subject') || '';
+				content = formData.get('content') || '';
+				
+				// Get the image file
+				const imageFile = formData.get('image');
+				
+				if (imageFile && imageFile.size > 0) {
+					// Convert the image to base64
+					const imageBuffer = await imageFile.arrayBuffer();
+					const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+					
+					// Create a data URL for the image
+					const mimeType = imageFile.type || 'image/jpeg';
+					imageData = `data:${mimeType};base64,${base64Image}`;
+					
+					console.log(`Image received and processed, size: ${(imageData.length / 1024).toFixed(2)}KB`);
+				}
+			} else {
+				// Regular JSON request without image
+				const body = await request.json();
+				subject = body.subject || '';
+				content = body.content || '';
+			}
+		} catch (error) {
+			console.error('Error parsing request data:', error);
+			return this.corsResponse({ error: 'Error parsing request data' }, 400, request);
+		}
 		
 		if (!content || content.trim() === '') {
 			return this.corsResponse({ error: 'Thread content is required' }, 400, request);
@@ -876,6 +927,7 @@ export class ForumObject extends DurableObject {
 			content,
 			username,
 			timestamp: new Date().toISOString(),
+			imageUrl: imageData,
 			replies: []
 		};
 		
@@ -898,8 +950,40 @@ export class ForumObject extends DurableObject {
 			return this.corsResponse({ error: 'Authentication required' }, 401, request);
 		}
 		
-		// Parse the request body
-		const { content } = await request.json();
+		// Check if we have a multipart form-data request (with image)
+		const contentType = request.headers.get('Content-Type') || '';
+		let content = '';
+		let imageData = null;
+		
+		try {
+			if (contentType.includes('multipart/form-data')) {
+				// Handle multipart form data with image attachment
+				const formData = await request.formData();
+				content = formData.get('content') || '';
+				
+				// Get the image file
+				const imageFile = formData.get('image');
+				
+				if (imageFile && imageFile.size > 0) {
+					// Convert the image to base64
+					const imageBuffer = await imageFile.arrayBuffer();
+					const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+					
+					// Create a data URL for the image
+					const mimeType = imageFile.type || 'image/jpeg';
+					imageData = `data:${mimeType};base64,${base64Image}`;
+					
+					console.log(`Reply image received and processed, size: ${(imageData.length / 1024).toFixed(2)}KB`);
+				}
+			} else {
+				// Regular JSON request without image
+				const body = await request.json();
+				content = body.content || '';
+			}
+		} catch (error) {
+			console.error('Error parsing reply request data:', error);
+			return this.corsResponse({ error: 'Error parsing request data' }, 400, request);
+		}
 		
 		if (!content || content.trim() === '') {
 			return this.corsResponse({ error: 'Reply content is required' }, 400, request);
@@ -920,7 +1004,8 @@ export class ForumObject extends DurableObject {
 			id: replyId,
 			content,
 			username,
-			timestamp: new Date().toISOString()
+			timestamp: new Date().toISOString(),
+			imageUrl: imageData
 		};
 		
 		// Add reply to the thread

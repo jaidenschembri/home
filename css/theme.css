@@ -126,14 +126,14 @@ body.light-theme .signed-in-text {
 
 /* === LIGHT THEME MODAL OVERRIDES (moved from base.css) === */
 body.light-theme #auth-modal {
-  background: var(--modal-bg-light);
-  backdrop-filter: blur(2px);
+  background: #ffffff !important;
+  backdrop-filter: none !important;
   border: 1px solid var(--modal-border-light);
 }
 
 body.light-theme #auth-modal .title-bar {
-  background: var(--modal-title-bg-light);
-  backdrop-filter: blur(2px);
+  background: #ffffff !important;
+  backdrop-filter: none !important;
   border-bottom: 1px solid var(--modal-title-border-light);
 }
 
