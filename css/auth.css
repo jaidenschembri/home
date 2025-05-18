@@ -89,6 +89,10 @@
   background: none;
   color: var(--modal-input-fg);
   border: 1px solid var(--modal-input-border);
+  border-radius: 0 !important;
+  -webkit-border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
   margin-bottom: 8px;
   padding: 7px 10px;
   font-size: 14px;
