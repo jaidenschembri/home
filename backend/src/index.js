@@ -473,7 +473,7 @@ async function handleDeleteThread(request, env, threadId) {
 		// Use the proper absolute URL for Durable Object
 		const requestURL = new URL(request.url);
 		const doURL = new URL(requestURL.origin);
-		doURL.pathname = `/threads/${threadId}`;
+		doURL.pathname = `/api/forum/posts/${threadId}`;
 		
 		console.log(`Forwarding to Durable Object URL: ${doURL.toString()}`);
 		
