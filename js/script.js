@@ -40,7 +40,7 @@ const ThemeManager = {
         
         // Get saved theme preference or default to dark
         const savedTheme = localStorage.getItem('theme');
-        const isDark = savedTheme === null ? true : savedTheme === 'dark';
+        let isDark = savedTheme === null ? true : savedTheme === 'dark';
         
         // Set initial theme state
         if (!isDark) {

@@ -204,17 +204,20 @@ export default {
 			const forumId = env.FORUM.idFromName('forum-data');
 			const forum = env.FORUM.get(forumId);
 			
-			// Extract thread ID from URL if present
-			const matches = path.match(/\/api\/forum\/posts\/([^\/]+)(?:\/replies\/([^\/]+))?/);
+			// Extract thread ID and reply ID from URL if present
+			const matches = path.match(/\/api\/forum\/posts\/([^\/]+)(?:\/replies(?:\/([^\/]+))?)?/);
 			const threadId = matches?.[1];
 			const replyId = matches?.[2];
+			
+			console.log('Path matches:', { threadId, replyId, path });
 			
 			if (request.method === 'GET') {
 				return handleGetThreads(request, env);
 			}
 			
 			if (request.method === 'POST') {
-				if (threadId) {
+				if (threadId && path.endsWith('/replies')) {
+					console.log('Handling reply creation for thread:', threadId);
 					return handleCreateReply(request, env, threadId);
 				}
 				return handleCreateThread(request, env);
@@ -223,8 +226,8 @@ export default {
 			if (request.method === 'DELETE') {
 				if (threadId && replyId) {
 					// Forward the request to the forum object for reply deletion
-					const url = new URL(request.url);
-					return forum.fetch(url.toString(), {
+					console.log('Handling reply deletion:', { threadId, replyId });
+					return forum.fetch(request.url, {
 						method: 'DELETE',
 						headers: request.headers
 					});
@@ -388,27 +391,26 @@ async function handleCreateThread(request, env) {
 		doURL.pathname = "/threads";
 		
 		// Clone the request with all headers and body to forward to the Durable Object
-		// We need to clone it because request bodies can only be read once
-		// Use a streaming clone to preserve multipart form data
-		const clonedBody = await request.clone().arrayBuffer();
-		
-		// Forward all headers from the original request
-		const headers = new Headers();
-		request.headers.forEach((value, key) => {
-			headers.set(key, value);
+		const clonedRequest = new Request(doURL.toString(), {
+			method: 'POST',
+			headers: request.headers,
+			body: await request.arrayBuffer() // Use arrayBuffer to properly handle binary data
 		});
 		
 		// Call the createThread method on the Durable Object
-		const response = await forumObj.fetch(doURL.toString(), {
-			method: 'POST',
-			headers,
-			body: clonedBody
-		});
+		const response = await forumObj.fetch(clonedRequest);
+		
+		if (!response.ok) {
+			console.error('Error from Durable Object:', await response.clone().text());
+		}
 		
 		return response;
 	} catch (error) {
 		console.error('Create thread error:', error);
-		return jsonResponse({ error: `Failed to create thread: ${error.message}` }, 500, request);
+		return jsonResponse({ 
+			error: 'Failed to create thread',
+			details: error.message
+		}, 500, request);
 	}
 }
 
@@ -421,6 +423,8 @@ async function handleCreateReply(request, env, threadId) {
 			return jsonResponse({ error: 'Authentication required' }, 401, request);
 		}
 		
+		console.log(`Creating reply for thread ${threadId}`);
+		
 		// Get the forum Durable Object
 		const id = env.FORUM.idFromName('forum-data');
 		const forumObj = env.FORUM.get(id);
@@ -430,28 +434,40 @@ async function handleCreateReply(request, env, threadId) {
 		const doURL = new URL(requestURL.origin);
 		doURL.pathname = `/threads/${threadId}/replies`;
 		
-		// Clone the request with all headers and body to forward to the Durable Object
-		// We need to clone it because request bodies can only be read once
-		// Use a streaming clone to preserve multipart form data
-		const clonedBody = await request.clone().arrayBuffer();
+		console.log('Forwarding reply creation to Durable Object with URL:', doURL.toString());
 		
-		// Forward all headers from the original request
-		const headers = new Headers();
-		request.headers.forEach((value, key) => {
-			headers.set(key, value);
+		// Clone the request with all headers and body to forward to the Durable Object
+		const clonedRequest = new Request(doURL.toString(), {
+			method: 'POST',
+			headers: request.headers,
+			body: await request.arrayBuffer() // Use arrayBuffer to properly handle binary data
 		});
 		
 		// Call the createReply method on the Durable Object
-		const response = await forumObj.fetch(doURL.toString(), {
-			method: 'POST',
-			headers,
-			body: clonedBody
-		});
+		const response = await forumObj.fetch(clonedRequest);
+		
+		if (!response.ok) {
+			const errorText = await response.clone().text();
+			console.error('Error from Durable Object:', errorText);
+			try {
+				const errorJson = JSON.parse(errorText);
+				return jsonResponse(errorJson, response.status, request);
+			} catch (e) {
+				return jsonResponse({ 
+					error: 'Error processing reply',
+					details: errorText
+				}, response.status, request);
+			}
+		}
 		
 		return response;
 	} catch (error) {
 		console.error('Create reply error:', error);
-		return jsonResponse({ error: `Failed to create reply: ${error.message}` }, 500, request);
+		return jsonResponse({ 
+			error: 'Failed to create reply',
+			details: error.message,
+			phase: 'request_handling'
+		}, 500, request);
 	}
 }
 
@@ -816,12 +832,21 @@ export class ForumObject extends DurableObject {
 		
 		console.log(`ForumObject received request with path: ${path}, method: ${request.method}`);
 		
-		// Route requests based on path
+		// Extract thread ID and reply ID from URL if present
+		const threadMatch = path.match(/\/threads\/([^\/]+)\/replies/);
+		const threadId = threadMatch?.[1];
+		
+		if (threadMatch && request.method === 'POST') {
+			console.log('ForumObject handling reply creation for thread:', threadId);
+			return this.createReply(request, threadId);
+		}
+		
+		// Handle DELETE request for a thread
 		if (path === '/validate' || path.endsWith('/validate')) {
 			return this.validateRequest(request);
 		}
 		
-		if (path === '/threads' || path.endsWith('/threads')) {
+		if (path === '/threads' || path.endsWith('/threads') || path === '/api/forum/posts') {
 			if (request.method === 'GET') {
 				return this.getThreads(request);
 			} else if (request.method === 'POST') {
@@ -829,36 +854,18 @@ export class ForumObject extends DurableObject {
 			}
 		}
 		
-		// Handle deleting a specific thread (admin only)
-		const deleteMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)$/);
-		if (deleteMatch && request.method === 'DELETE') {
-			const threadId = deleteMatch[1];
-			console.log(`ForumObject handling delete for thread ID: ${threadId}`);
+		// Add handler for thread deletion
+		const deleteThreadMatch = path.match(/\/api\/forum\/posts\/([^\/]+)$/);
+		if (deleteThreadMatch && request.method === 'DELETE') {
+			const threadId = deleteThreadMatch[1];
+			console.log('ForumObject handling thread deletion:', threadId);
 			return this.deleteThread(request, threadId);
 		}
 		
-		// Handle deleting a reply
-		const replyMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)\/replies\/([^\/]+)$/);
-		if (replyMatch && request.method === 'DELETE') {
-			const threadId = replyMatch[1];
-			const replyId = replyMatch[2];
-			console.log(`ForumObject handling delete for reply ID: ${replyId} in thread: ${threadId}`);
-			return this.deleteReply(request, threadId, replyId);
-		}
-		
-		// Handle replies to threads
-		const createReplyMatch = path.match(/^\/api\/forum\/posts\/([^\/]+)\/replies$/);
-		if (createReplyMatch && request.method === 'POST') {
-			const threadId = createReplyMatch[1];
-			return this.createReply(request, threadId);
-		}
-		
-		// Handle session storage
 		if (path === '/store-session' || path.endsWith('/store-session')) {
 			return this.storeSessionRequest(request);
 		}
 		
-		// Admin-only endpoint to purge all threads
 		if ((path === '/api/forum/posts/purge' || path.endsWith('/posts/purge')) && request.method === 'DELETE') {
 			return this.purgeAllThreads(request);
 		}
@@ -901,152 +908,318 @@ export class ForumObject extends DurableObject {
 			return this.corsResponse({ error: 'Authentication required' }, 401, request);
 		}
 		
-		// Check if we have a multipart form-data request (with image)
-		const contentType = request.headers.get('Content-Type') || '';
-		let subject = '';
-		let content = '';
-		let imageData = null;
-		
 		try {
+			// Check if we have a multipart form-data request (with image)
+			const contentType = request.headers.get('Content-Type') || '';
+			console.log('Request Content-Type:', contentType);
+			
+			let subject = '';
+			let content = '';
+			let imageData = null;
+			
 			if (contentType.includes('multipart/form-data')) {
-				// Handle multipart form data with image attachment
-				const formData = await request.formData();
-				subject = formData.get('subject') || '';
-				content = formData.get('content') || '';
-				
-				// Get the image file
-				const imageFile = formData.get('image');
-				
-				if (imageFile && imageFile.size > 0) {
-					// Convert the image to base64
-					const imageBuffer = await imageFile.arrayBuffer();
-					const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+				try {
+					// Handle multipart form data with image attachment
+					console.log('Processing multipart form data...');
+					const formData = await request.formData();
 					
-					// Create a data URL for the image
-					const mimeType = imageFile.type || 'image/jpeg';
-					imageData = `data:${mimeType};base64,${base64Image}`;
+					subject = formData.get('subject') || '';
+					content = formData.get('content') || '';
+					console.log('Content length:', content.length);
 					
-					console.log(`Image received and processed, size: ${(imageData.length / 1024).toFixed(2)}KB`);
+					// Get the image file
+					const imageFile = formData.get('image');
+					if (imageFile) {
+						console.log('Image file details:', {
+							name: imageFile.name,
+							type: imageFile.type,
+							size: imageFile.size
+						});
+						
+						if (imageFile.size > 0) {
+							// Validate image size (5MB max)
+							const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+							if (imageFile.size > MAX_SIZE) {
+								return this.corsResponse({ error: 'Image file too large. Maximum size is 5MB.' }, 400, request);
+							}
+							
+							// Validate image type
+							if (!imageFile.type.startsWith('image/')) {
+								return this.corsResponse({ error: 'Invalid file type. Only images are allowed.' }, 400, request);
+							}
+							
+							try {
+								// Get the image data as an ArrayBuffer
+								const imageBuffer = await imageFile.arrayBuffer();
+								console.log('Image buffer size:', imageBuffer.byteLength);
+								
+								// Convert to base64 in chunks
+								const base64Image = this.arrayBufferToBase64(imageBuffer);
+								console.log('Base64 conversion successful');
+								
+								// Create a data URL for the image
+								const mimeType = imageFile.type || 'image/jpeg';
+								imageData = `data:${mimeType};base64,${base64Image}`;
+								
+								const imageSizeKB = (imageData.length / 1024).toFixed(2);
+								console.log(`Image processed successfully, final size: ${imageSizeKB}KB`);
+								
+								// Verify the data URL is valid
+								if (!imageData.startsWith('data:image/')) {
+									throw new Error('Invalid image data URL format');
+								}
+							} catch (imageError) {
+								console.error('Error processing image:', imageError);
+								return this.corsResponse({ 
+									error: 'Error processing image',
+									details: imageError.message,
+									phase: 'image_processing'
+								}, 400, request);
+							}
+						}
+					}
+				} catch (formError) {
+					console.error('Error parsing form data:', formError);
+					return this.corsResponse({ 
+						error: 'Error parsing form data',
+						details: formError.message,
+						phase: 'form_parsing'
+					}, 400, request);
 				}
 			} else {
-				// Regular JSON request without image
-				const body = await request.json();
-				subject = body.subject || '';
-				content = body.content || '';
+				try {
+					// Regular JSON request without image
+					console.log('Processing JSON request...');
+					const body = await request.json();
+					subject = body.subject || '';
+					content = body.content || '';
+					console.log('Content length:', content.length);
+				} catch (jsonError) {
+					console.error('Error parsing JSON:', jsonError);
+					return this.corsResponse({ 
+						error: 'Error parsing JSON data',
+						details: jsonError.message,
+						phase: 'json_parsing'
+					}, 400, request);
+				}
 			}
+			
+			// Allow empty content if an image is provided
+			if ((!content || content.trim() === '') && !imageData) {
+				return this.corsResponse({ error: 'Thread content or image is required' }, 400, request);
+			}
+			
+			// Get existing threads
+			const threads = await this.state.storage.get("threads") || [];
+			
+			// Create new thread
+			const threadId = Date.now().toString(); // Simple ID generation
+			const newThread = {
+				id: threadId,
+				subject: subject || '',
+				content,
+				username,
+				timestamp: new Date().toISOString(),
+				imageUrl: imageData,
+				replies: []
+			};
+			
+			// Add to beginning of threads array
+			threads.unshift(newThread);
+			
+			// Store updated threads
+			await this.state.storage.put("threads", threads);
+			
+			console.log(`Thread ${threadId} created successfully`);
+			
+			return this.corsResponse({ 
+				success: true,
+				thread: newThread
+			}, 201, request);
 		} catch (error) {
-			console.error('Error parsing request data:', error);
-			return this.corsResponse({ error: 'Error parsing request data' }, 400, request);
+			console.error('Error handling thread creation:', error);
+			return this.corsResponse({ 
+				error: 'Internal server error',
+				details: error.message,
+				phase: 'general'
+			}, 500, request);
+		}
+	}
+
+	// Helper function to convert ArrayBuffer to base64 in chunks
+	arrayBufferToBase64(buffer) {
+		let binary = '';
+		const bytes = new Uint8Array(buffer);
+		const chunkSize = 1024; // Process 1KB at a time
+		
+		for (let i = 0; i < bytes.length; i += chunkSize) {
+			const chunk = bytes.slice(i, i + chunkSize);
+			chunk.forEach(b => binary += String.fromCharCode(b));
 		}
 		
-		// Allow empty content if an image is provided
-		if ((!content || content.trim() === '') && !imageData) {
-			return this.corsResponse({ error: 'Thread content or image is required' }, 400, request);
-		}
-		
-		// Get existing threads
-		const threads = await this.state.storage.get("threads") || [];
-		
-		// Create new thread
-		const threadId = Date.now().toString(); // Simple ID generation
-		const newThread = {
-			id: threadId,
-			subject: subject || '',
-			content,
-			username,
-			timestamp: new Date().toISOString(),
-			imageUrl: imageData,
-			replies: []
-		};
-		
-		// Add to beginning of threads array
-		threads.unshift(newThread);
-		
-		// Store updated threads
-		await this.state.storage.put("threads", threads);
-		
-		return this.corsResponse({ 
-			success: true,
-			thread: newThread
-		}, 201, request);
+		return btoa(binary);
 	}
 
 	// Create a reply to a thread
 	async createReply(request, threadId) {
-		const username = await this.validateToken(request);
-		if (!username) {
-			return this.corsResponse({ error: 'Authentication required' }, 401, request);
-		}
-		
-		// Check if we have a multipart form-data request (with image)
-		const contentType = request.headers.get('Content-Type') || '';
-		let content = '';
-		let imageData = null;
-		
 		try {
+			const username = await this.validateToken(request);
+			if (!username) {
+				return this.corsResponse({ error: 'Authentication required' }, 401, request);
+			}
+			
+			console.log(`Creating reply for thread ${threadId} by user ${username}`);
+			
+			// Check if we have a multipart form-data request (with image)
+			const contentType = request.headers.get('Content-Type') || '';
+			console.log('Request Content-Type:', contentType);
+			
+			let content = '';
+			let imageData = null;
+			
 			if (contentType.includes('multipart/form-data')) {
-				// Handle multipart form data with image attachment
-				const formData = await request.formData();
-				content = formData.get('content') || '';
-				
-				// Get the image file
-				const imageFile = formData.get('image');
-				
-				if (imageFile && imageFile.size > 0) {
-					// Convert the image to base64
-					const imageBuffer = await imageFile.arrayBuffer();
-					const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+				try {
+					// Handle multipart form data with image attachment
+					console.log('Processing multipart form data...');
+					const formData = await request.formData();
 					
-					// Create a data URL for the image
-					const mimeType = imageFile.type || 'image/jpeg';
-					imageData = `data:${mimeType};base64,${base64Image}`;
+					content = formData.get('content') || '';
+					console.log('Content length:', content.length);
 					
-					console.log(`Reply image received and processed, size: ${(imageData.length / 1024).toFixed(2)}KB`);
+					// Get the image file
+					const imageFile = formData.get('image');
+					if (imageFile) {
+						console.log('Image file details:', {
+							name: imageFile.name,
+							type: imageFile.type,
+							size: imageFile.size
+						});
+						
+						if (imageFile.size > 0) {
+							// Validate image size (5MB max)
+							const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+							if (imageFile.size > MAX_SIZE) {
+								return this.corsResponse({ error: 'Image file too large. Maximum size is 5MB.' }, 400, request);
+							}
+							
+							// Validate image type
+							if (!imageFile.type.startsWith('image/')) {
+								return this.corsResponse({ error: 'Invalid file type. Only images are allowed.' }, 400, request);
+							}
+							
+							try {
+								// Get the image data as an ArrayBuffer
+								const imageBuffer = await imageFile.arrayBuffer();
+								console.log('Image buffer size:', imageBuffer.byteLength);
+								
+								// Convert to base64 in chunks
+								const base64Image = this.arrayBufferToBase64(imageBuffer);
+								console.log('Base64 conversion successful');
+								
+								// Create a data URL for the image
+								const mimeType = imageFile.type || 'image/jpeg';
+								imageData = `data:${mimeType};base64,${base64Image}`;
+								
+								const imageSizeKB = (imageData.length / 1024).toFixed(2);
+								console.log(`Image processed successfully, final size: ${imageSizeKB}KB`);
+								
+								// Verify the data URL is valid
+								if (!imageData.startsWith('data:image/')) {
+									throw new Error('Invalid image data URL format');
+								}
+							} catch (imageError) {
+								console.error('Error processing image:', imageError);
+								return this.corsResponse({ 
+									error: 'Error processing image',
+									details: imageError.message,
+									phase: 'image_processing'
+								}, 400, request);
+							}
+						}
+					}
+				} catch (formError) {
+					console.error('Error parsing form data:', formError);
+					return this.corsResponse({ 
+						error: 'Error parsing form data',
+						details: formError.message,
+						phase: 'form_parsing'
+					}, 400, request);
 				}
 			} else {
-				// Regular JSON request without image
-				const body = await request.json();
-				content = body.content || '';
+				try {
+					// Regular JSON request without image
+					console.log('Processing JSON request...');
+					const body = await request.json();
+					content = body.content || '';
+					console.log('Content length:', content.length);
+				} catch (jsonError) {
+					console.error('Error parsing JSON:', jsonError);
+					return this.corsResponse({ 
+						error: 'Error parsing JSON data',
+						details: jsonError.message,
+						phase: 'json_parsing'
+					}, 400, request);
+				}
+			}
+			
+			// Allow empty content if an image is provided
+			if ((!content || content.trim() === '') && !imageData) {
+				return this.corsResponse({ error: 'Reply content or image is required' }, 400, request);
+			}
+			
+			// Get existing threads
+			const threads = await this.state.storage.get("threads") || [];
+			
+			// Find the thread to reply to
+			const threadIndex = threads.findIndex(t => t.id === threadId);
+			if (threadIndex === -1) {
+				console.error(`Thread ${threadId} not found`);
+				return this.corsResponse({ error: 'Thread not found' }, 404, request);
+			}
+			
+			// Create new reply
+			const replyId = Date.now().toString(); // Simple ID generation
+			const newReply = {
+				id: replyId,
+				content,
+				username,
+				timestamp: new Date().toISOString(),
+				imageUrl: imageData
+			};
+			
+			// Initialize replies array if it doesn't exist
+			if (!threads[threadIndex].replies) {
+				threads[threadIndex].replies = [];
+			}
+			
+			// Add reply to the thread
+			threads[threadIndex].replies.push(newReply);
+			
+			// Store updated threads
+			try {
+				await this.state.storage.put("threads", threads);
+				console.log(`Reply ${replyId} created successfully for thread ${threadId}`);
+				
+				return this.corsResponse({ 
+					success: true,
+					reply: newReply
+				}, 201, request);
+			} catch (storageError) {
+				console.error('Error storing reply:', storageError);
+				return this.corsResponse({ 
+					error: 'Error storing reply',
+					details: storageError.message,
+					phase: 'storage'
+				}, 500, request);
 			}
 		} catch (error) {
-			console.error('Error parsing reply request data:', error);
-			return this.corsResponse({ error: 'Error parsing request data' }, 400, request);
+			console.error('Error handling reply creation:', error);
+			return this.corsResponse({ 
+				error: 'Internal server error',
+				details: error.message,
+				phase: 'general'
+			}, 500, request);
 		}
-		
-		// Allow empty content if an image is provided
-		if ((!content || content.trim() === '') && !imageData) {
-			return this.corsResponse({ error: 'Reply content or image is required' }, 400, request);
-		}
-		
-		// Get existing threads
-		const threads = await this.state.storage.get("threads") || [];
-		
-		// Find the thread to reply to
-		const threadIndex = threads.findIndex(t => t.id === threadId);
-		if (threadIndex === -1) {
-			return this.corsResponse({ error: 'Thread not found' }, 404, request);
-		}
-		
-		// Create new reply
-		const replyId = Date.now().toString(); // Simple ID generation
-		const newReply = {
-			id: replyId,
-			content,
-			username,
-			timestamp: new Date().toISOString(),
-			imageUrl: imageData
-		};
-		
-		// Add reply to the thread
-		threads[threadIndex].replies.push(newReply);
-		
-		// Store updated threads
-		await this.state.storage.put("threads", threads);
-		
-		return this.corsResponse({ 
-			success: true,
-			reply: newReply
-		}, 201, request);
 	}
 
 	// Store a user session when they log in
@@ -1124,50 +1297,6 @@ export class ForumObject extends DurableObject {
 		return this.corsResponse({ 
 			success: true,
 			message: 'All threads purged successfully'
-		}, 200, request);
-	}
-
-	// Delete a reply from a thread (admin only)
-	async deleteReply(request, threadId, replyId) {
-		console.log(`Attempting to delete reply ${replyId} from thread ${threadId}`);
-		
-		const username = await this.validateToken(request);
-		if (!username) {
-			return this.corsResponse({ error: 'Authentication required' }, 401, request);
-		}
-		
-		// Check if user is an admin
-		if (username !== 'admin') {
-			return this.corsResponse({ error: 'Admin privileges required' }, 403, request);
-		}
-		
-		// Get existing threads
-		const threads = await this.state.storage.get("threads") || [];
-		
-		// Find the thread
-		const threadIndex = threads.findIndex(t => t.id === threadId);
-		if (threadIndex === -1) {
-			console.log(`Thread ${threadId} not found`);
-			return this.corsResponse({ error: 'Thread not found' }, 404, request);
-		}
-		
-		// Find the reply
-		const replyIndex = threads[threadIndex].replies.findIndex(r => r.id === replyId);
-		if (replyIndex === -1) {
-			console.log(`Reply ${replyId} not found in thread ${threadId}`);
-			return this.corsResponse({ error: 'Reply not found' }, 404, request);
-		}
-		
-		// Remove the reply
-		threads[threadIndex].replies.splice(replyIndex, 1);
-		
-		// Store updated threads
-		await this.state.storage.put("threads", threads);
-		
-		console.log(`Successfully deleted reply ${replyId} from thread ${threadId}`);
-		return this.corsResponse({ 
-			success: true,
-			message: 'Reply deleted successfully'
 		}, 200, request);
 	}
 }
