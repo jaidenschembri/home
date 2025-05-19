@@ -362,36 +362,6 @@ function initAuthModal() {
                     detail: { username: data.user.username }
                 }));
                 
-                // Direct reload of shop content if we're on the shop page
-                if (window.location.pathname.includes('shop.html')) {
-                    console.log('On shop page, directly loading shop content');
-                    const shopContainer = document.querySelector('.shop-container');
-                    const shopContent = document.getElementById('shopContent');
-                    
-                    if (shopContainer && shopContent) {
-                        // Show navigation links if they exist
-                        const navLinks = shopContainer.querySelector('.navigation-links');
-                        if (navLinks) {
-                            navLinks.style.display = 'block';
-                        }
-                        
-                        // Reset shop content and show loading
-                        shopContent.style.display = 'block';
-                        shopContent.innerHTML = '<div class="loading-message">Loading shop items...</div>';
-                        
-                        // Call the shop's loadShopItems function
-                        setTimeout(() => {
-                            // If shop.js's initShop function made loadShopItems global, we can call it directly
-                            if (typeof window.loadShopItems === 'function') {
-                                window.loadShopItems();
-                            } else {
-                                // Otherwise, just reload the page
-                                window.location.reload();
-                            }
-                        }, 100);
-                    }
-                }
-                
                 // Fade out and hide modal
                 setTimeout(() => {
                     const fadeEffect = setInterval(() => {
