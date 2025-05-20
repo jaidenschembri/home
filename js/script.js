@@ -166,6 +166,7 @@ const AuthManager = {
     showLoginAnchor: null,
     signedInText: null,
     usernameSpan: null,
+    tokenRefreshInterval: null,
 
     init() {
         console.log('Using API URL:', CONFIG.API_URL);
@@ -238,18 +239,32 @@ const AuthManager = {
                 });
                 
                 if (data.valid && data.user) {
+                    // Store username for easy access
+                    localStorage.setItem('username', data.user.username);
                     this.showSignedInState(data.user.username);
+                    
+                    // Set token refresh schedule - check every 12 hours
+                    if (!this.tokenRefreshInterval) {
+                        this.tokenRefreshInterval = setInterval(() => {
+                            this.refreshAuthToken();
+                        }, 12 * 60 * 60 * 1000); // 12 hours
+                    }
                 } else {
                     localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
+                    localStorage.removeItem('username');
                     this.showSignedOutState();
+                    this.clearTokenRefresh();
                 }
             } catch (error) {
                 console.error('Error validating token:', error);
                 localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
+                localStorage.removeItem('username');
                 this.showSignedOutState();
+                this.clearTokenRefresh();
             }
         } else {
             this.showSignedOutState();
+            this.clearTokenRefresh();
         }
     },
 
@@ -266,9 +281,33 @@ const AuthManager = {
         if (this.signedInText) this.signedInText.style.display = 'none';
     },
 
-    logout() {
+    async logout() {
+        const token = localStorage.getItem(CONFIG.AUTH_TOKEN_KEY);
+        
+        // Clear local storage first for immediate UI feedback
         localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
+        localStorage.removeItem('username');
         this.showSignedOutState();
+        this.clearTokenRefresh();
+        
+        // Attempt to invalidate token on server (not critical if it fails)
+        if (token) {
+            try {
+                // This is a best-effort invalidation - we don't need to wait for it
+                fetch(`${CONFIG.API_URL}/api/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    mode: 'cors'
+                }).catch(err => {
+                    console.log('Token invalidation failed, but user is still logged out locally');
+                });
+            } catch (error) {
+                console.log('Error during logout attempt, but user is still logged out locally');
+            }
+        }
     },
 
     showModal() {
@@ -360,10 +399,18 @@ const AuthManager = {
             
             if (data.token) {
                 localStorage.setItem(CONFIG.AUTH_TOKEN_KEY, data.token);
+                // Store username for easy access
+                localStorage.setItem('username', data.user.username);
                 this.responseDiv.className = 'auth-success';
                 this.responseDiv.textContent = `Welcome, ${data.user.username}!`;
                 
                 this.showSignedInState(data.user.username);
+                
+                // Start token refresh interval
+                this.clearTokenRefresh(); // Clear any existing interval
+                this.tokenRefreshInterval = setInterval(() => {
+                    this.refreshAuthToken();
+                }, 12 * 60 * 60 * 1000); // 12 hours
                 
                 document.dispatchEvent(new CustomEvent('userLoggedIn', {
                     detail: { username: data.user.username }
@@ -401,6 +448,45 @@ const AuthManager = {
             return false;
         }
         return true;
+    },
+
+    // Refresh auth token to extend session
+    async refreshAuthToken() {
+        const token = localStorage.getItem(CONFIG.AUTH_TOKEN_KEY);
+        if (!token) {
+            this.clearTokenRefresh();
+            return;
+        }
+        
+        try {
+            // This endpoint validates the token which effectively refreshes the session
+            const data = await Utils.fetchWithErrorHandling(`${CONFIG.API_URL}/api/validate`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                mode: 'cors'
+            });
+            
+            if (!data.valid) {
+                // If token becomes invalid, remove it and clear interval
+                localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
+                localStorage.removeItem('username');
+                this.showSignedOutState();
+                this.clearTokenRefresh();
+            }
+        } catch (error) {
+            console.error('Error refreshing token:', error);
+            // Don't immediately log out on network errors
+        }
+    },
+    
+    clearTokenRefresh() {
+        if (this.tokenRefreshInterval) {
+            clearInterval(this.tokenRefreshInterval);
+            this.tokenRefreshInterval = null;
+        }
     }
 };
 

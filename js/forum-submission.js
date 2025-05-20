@@ -24,10 +24,10 @@ export async function handleThreadSubmission(e, elements, API_URL, postsCache, a
     
     // Image validation
     if (imageFile) {
-        // Check file size (max 5MB)
-        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+        // Check file size (max 100MB)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
         if (imageFile.size > MAX_FILE_SIZE) {
-            elements.postResponse.textContent = "Image file is too large. Maximum size is 5MB.";
+            elements.postResponse.textContent = "Image file too large. Maximum size is 100MB.";
             elements.postResponse.className = "post-response error";
             return;
         }

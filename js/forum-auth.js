@@ -4,11 +4,10 @@
 export async function checkAuthentication(API_URL, elements, title = 'Forum', message) {
     console.log("Checking authentication status");
     const token = localStorage.getItem('authToken');
+    const storedUsername = localStorage.getItem('username');
+    
     console.log("Token exists:", !!token);
-    if (token) {
-        // Log the first few characters of the token for debugging
-        console.log("Token format check:", token.substring(0, 10) + "...");
-    }
+    console.log("Stored username:", storedUsername || "none");
     
     if (!token) {
         // User is not authenticated - hide forum content and show login prompt
@@ -21,8 +20,9 @@ export async function checkAuthentication(API_URL, elements, title = 'Forum', me
     const isDisplayed = signedInText && (window.getComputedStyle(signedInText).display !== 'none');
     console.log("Signed in text is displayed:", isDisplayed);
     
-    if (isDisplayed) {
-        // User is already verified as logged in by the main site code
+    // If username is stored and sign in text is displayed, user is authenticated
+    if (isDisplayed && storedUsername) {
+        console.log("User is already authenticated as:", storedUsername);
         return true;
     }
     

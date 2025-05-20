@@ -198,6 +198,10 @@ export default {
 		if (path === '/api/validate' && request.method === 'GET') {
 			return handleValidate(request, env);
 		}
+		
+		if (path === '/api/logout' && request.method === 'POST') {
+			return handleLogout(request, env);
+		}
 
 		// Forum endpoints
 		if (path.startsWith('/api/forum/posts')) {
@@ -635,6 +639,10 @@ export class UsersObject extends DurableObject {
 		if (path === '/validate' || path.endsWith('/validate')) {
 			return this.validate(request);
 		}
+		
+		if (path === '/logout' || path.endsWith('/logout')) {
+			return this.logout(request);
+		}
 
 		console.log(`Path not matched: ${path}`);
 		return jsonResponse({ error: `Not found: ${path}` }, 404, request);
@@ -722,7 +730,7 @@ export class UsersObject extends DurableObject {
 		// Generate a simple token (in a real app, use a proper JWT library)
 		const token = crypto.randomUUID();
 		// Store the session token
-		const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
+		const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
 		await this.state.storage.put("session", {
 			token,
 			username: userData.username,
@@ -759,6 +767,32 @@ export class UsersObject extends DurableObject {
 				username: userData.username
 			}
 		}, 200, request);
+	}
+
+	// Logout the user by invalidating their token
+	async logout(request) {
+		// Get the token from the Authorization header
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return this.corsResponse({ success: false, error: 'Invalid token' }, 401, request);
+		}
+		
+		const token = authHeader.split(' ')[1];
+		if (!token) {
+			return this.corsResponse({ success: false, error: 'Invalid token' }, 401, request);
+		}
+		
+		// Get the session
+		const session = await this.state.storage.get("session");
+		if (!session || session.token !== token) {
+			// Token not found or doesn't match, but we'll consider this a successful logout
+			return this.corsResponse({ success: true }, 200, request);
+		}
+		
+		// Delete the session
+		await this.state.storage.delete("session");
+		
+		return this.corsResponse({ success: true }, 200, request);
 	}
 }
 
@@ -844,6 +878,10 @@ export class ForumObject extends DurableObject {
 		// Handle DELETE request for a thread
 		if (path === '/validate' || path.endsWith('/validate')) {
 			return this.validateRequest(request);
+		}
+		
+		if (path === '/logout' || path.endsWith('/logout')) {
+			return this.logoutRequest(request);
 		}
 		
 		if (path === '/threads' || path.endsWith('/threads') || path === '/api/forum/posts') {
@@ -937,10 +975,10 @@ export class ForumObject extends DurableObject {
 						});
 						
 						if (imageFile.size > 0) {
-							// Validate image size (5MB max)
-							const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+							// Validate image size (100MB max)
+							const MAX_SIZE = 100 * 1024 * 1024; // 100MB (practically unlimited for forum images)
 							if (imageFile.size > MAX_SIZE) {
-								return this.corsResponse({ error: 'Image file too large. Maximum size is 5MB.' }, 400, request);
+								return this.corsResponse({ error: 'Image file too large. Maximum size is 100MB.' }, 400, request);
 							}
 							
 							// Validate image type
@@ -1096,10 +1134,10 @@ export class ForumObject extends DurableObject {
 						});
 						
 						if (imageFile.size > 0) {
-							// Validate image size (5MB max)
-							const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+							// Validate image size (100MB max)
+							const MAX_SIZE = 100 * 1024 * 1024; // 100MB (practically unlimited for forum images)
 							if (imageFile.size > MAX_SIZE) {
-								return this.corsResponse({ error: 'Image file too large. Maximum size is 5MB.' }, 400, request);
+								return this.corsResponse({ error: 'Image file too large. Maximum size is 100MB.' }, 400, request);
 							}
 							
 							// Validate image type
@@ -1298,5 +1336,109 @@ export class ForumObject extends DurableObject {
 			success: true,
 			message: 'All threads purged successfully'
 		}, 200, request);
+	}
+
+	// Logout the user by invalidating their token
+	async logoutRequest(request) {
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return this.corsResponse({ success: false, error: 'Invalid token' }, 401, request);
+		}
+		
+		const token = authHeader.split(' ')[1];
+		if (!token) {
+			return this.corsResponse({ success: false, error: 'Invalid token' }, 401, request);
+		}
+		
+		// Get all sessions
+		const sessions = await this.state.storage.get("sessions") || {};
+		let userFound = false;
+		
+		// Find and remove the session with the matching token
+		for (const [username, sessionData] of Object.entries(sessions)) {
+			if (sessionData.token === token) {
+				console.log(`Removing session for user: ${username}`);
+				delete sessions[username];
+				userFound = true;
+				break;
+			}
+		}
+		
+		// Store updated sessions
+		if (userFound) {
+			await this.state.storage.put("sessions", sessions);
+		}
+		
+		return this.corsResponse({ success: true }, 200, request);
+	}
+}
+
+// Logout handler to invalidate token
+async function handleLogout(request, env) {
+	try {
+		const authHeader = request.headers.get('Authorization');
+		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+			return jsonResponse({ success: false, error: 'No valid token provided' }, 400, request);
+		}
+		
+		const token = authHeader.split(' ')[1];
+		if (!token) {
+			return jsonResponse({ success: false, error: 'No valid token provided' }, 400, request);
+		}
+		
+		// Try to get username from forum sessions first
+		const forumId = env.FORUM.idFromName('forum-data');
+		const forumObj = env.FORUM.get(forumId);
+		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = "/logout";
+		
+		// Forward the Authorization header to the Durable Object
+		const headers = new Headers();
+		headers.set('Authorization', authHeader);
+		if (request.headers.has('Origin')) {
+			headers.set('Origin', request.headers.get('Origin'));
+		}
+		
+		// Log out from the Forum Object
+		try {
+			await forumObj.fetch(doURL.toString(), {
+				method: 'POST',
+				headers
+			});
+		} catch (error) {
+			console.error('Error logging out from forum object:', error);
+			// Continue anyway to try other objects
+		}
+		
+		// Also try to find and logout the specific user object
+		// Extract a username from the token (hacky, but useful for demo)
+		const possibleUsername = token.split('-')[0];
+		if (possibleUsername) {
+			try {
+				const userId = env.USERS.idFromName(`user-${possibleUsername}`);
+				const userObj = env.USERS.get(userId);
+				
+				const userLogoutURL = new URL(requestURL.origin);
+				userLogoutURL.pathname = "/logout";
+				
+				await userObj.fetch(userLogoutURL.toString(), {
+					method: 'POST',
+					headers
+				});
+			} catch (error) {
+				console.error(`Error logging out user ${possibleUsername}:`, error);
+				// Proceed anyway
+			}
+		}
+		
+		// Return success regardless - it's just a client-side logout
+		return jsonResponse({ success: true }, 200, request);
+	} catch (error) {
+		console.error('Logout error:', error);
+		// Even with errors, consider the logout successful from the client perspective
+		return jsonResponse({ success: true }, 200, request);
 	}
 }

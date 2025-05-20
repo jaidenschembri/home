@@ -38,21 +38,21 @@ export function addThreadToList(thread, elements, adminMode) {
             </div>
         ` : '<div class="replies-container" data-thread-id="' + thread.id + '"></div>'}
         
-        <button class="reply-toggle" onclick="document.getElementById('reply-form-${thread.id}').style.display = document.getElementById('reply-form-${thread.id}').style.display === 'none' || document.getElementById('reply-form-${thread.id}').style.display === '' ? 'block' : 'none'; return false;">Reply</button>
+        <button class="reply-toggle" onclick="document.getElementById('reply-form-${thread.id}').style.display = document.getElementById('reply-form-${thread.id}').style.display === 'none' || document.getElementById('reply-form-${thread.id}').style.display === '' ? 'block' : 'none'; return false;">[Reply]</button>
         
         <form id="reply-form-${thread.id}" class="reply-form" data-thread-id="${thread.id}">
             <textarea class="reply-content" placeholder="Write a reply..."></textarea>
             <div class="image-upload-container">
                 <label for="replyImage-${thread.id}" class="image-upload-label">
-                    Add image
+                    [Add image]
                 </label>
-                <input type="file" id="replyImage-${thread.id}" class="image-upload-input reply-image-input" accept="image/*">
+                <input type="file" id="replyImage-${thread.id}" class="image-upload-input" accept="image/*">
                 <div class="image-preview-container" style="display: none;">
                     <img class="image-preview">
                     <button type="button" class="remove-image-btn">✕</button>
                 </div>
             </div>
-            <button type="submit" class="reply-btn">Reply</button>
+            <button type="submit" class="reply-btn">[Submit]</button>
             <div class="reply-response"></div>
         </form>
     `;
@@ -211,10 +211,10 @@ export async function handleReplySubmission(e) {
     
     // Image validation
     if (imageFile) {
-        // Check file size (max 5MB)
-        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+        // Check file size (max 100MB)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
         if (imageFile.size > MAX_FILE_SIZE) {
-            replyResponse.textContent = "Image file is too large. Maximum size is 5MB.";
+            replyResponse.textContent = "Image file too large. Maximum size is 100MB.";
             replyResponse.className = "post-response error";
             return;
         }
