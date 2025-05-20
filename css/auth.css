@@ -178,9 +178,13 @@ input:focus {
   padding: 6px 18px;
   margin-top: 0;
   border-radius: var(--signin-btn-radius);
-  transition: background 0.2s, color 0.2s;
+  transition: text-decoration 0.2s ease;
   pointer-events: auto;
   font-family: var(--base-font);
+}
+
+.signin-btn:hover {
+  text-decoration: underline;
 }
 
 /* Nav Container */
@@ -195,10 +199,11 @@ input:focus {
   text-decoration: none;
   margin-right: 10px;
   display: inline-block;
+  transition: text-decoration 0.2s ease;
 }
 
 .nav-link:hover {
-  text-decoration: none;
+  text-decoration: underline;
   opacity: 1;
 }
 
