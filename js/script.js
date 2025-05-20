@@ -243,14 +243,13 @@ const AuthManager = {
                     localStorage.setItem('username', data.user.username);
                     this.showSignedInState(data.user.username);
                     
-                    // Set token refresh schedule - check every 6 hours
+                    // Set token refresh schedule - check every 12 hours
                     if (!this.tokenRefreshInterval) {
                         this.tokenRefreshInterval = setInterval(() => {
                             this.refreshAuthToken();
-                        }, 6 * 60 * 60 * 1000); // 6 hours
+                        }, 12 * 60 * 60 * 1000); // 12 hours
                     }
                 } else {
-                    // Only clear if token is explicitly invalid
                     localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
                     localStorage.removeItem('username');
                     this.showSignedOutState();
@@ -258,12 +257,10 @@ const AuthManager = {
                 }
             } catch (error) {
                 console.error('Error validating token:', error);
-                // Don't log out on network errors, just retry later
-                if (!this.tokenRefreshInterval) {
-                    this.tokenRefreshInterval = setInterval(() => {
-                        this.refreshAuthToken();
-                    }, 6 * 60 * 60 * 1000); // 6 hours
-                }
+                localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
+                localStorage.removeItem('username');
+                this.showSignedOutState();
+                this.clearTokenRefresh();
             }
         } else {
             this.showSignedOutState();
@@ -473,7 +470,7 @@ const AuthManager = {
             });
             
             if (!data.valid) {
-                // Only clear if token is explicitly invalid
+                // If token becomes invalid, remove it and clear interval
                 localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
                 localStorage.removeItem('username');
                 this.showSignedOutState();
@@ -481,7 +478,7 @@ const AuthManager = {
             }
         } catch (error) {
             console.error('Error refreshing token:', error);
-            // Don't log out on network errors, just retry later
+            // Don't immediately log out on network errors
         }
     },
     

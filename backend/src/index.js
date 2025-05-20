@@ -262,38 +262,76 @@ async function handleValidate(request, env) {
 			return jsonResponse({ valid: false }, 401, request);
 		}
 		
-		// Get the session
-		const session = await env.USERS.get(env.USERS.idFromName(`user-${token.split('-')[0] || 'unknown'}`)).storage.get("session");
-		if (!session || session.token !== token) {
-			return jsonResponse({ valid: false }, 401, request);
+		// Try to get username from forum sessions first (easier and more efficient)
+		const forumId = env.FORUM.idFromName('forum-data');
+		const forumObj = env.FORUM.get(forumId);
+		
+		// Use the proper absolute URL for Durable Object
+		const requestURL = new URL(request.url);
+		const doURL = new URL(requestURL.origin);
+		doURL.pathname = "/validate";
+		
+		// Forward the Authorization header to the Durable Object
+		const headers = new Headers();
+		headers.set('Authorization', authHeader);
+		if (request.headers.has('Origin')) {
+			headers.set('Origin', request.headers.get('Origin'));
 		}
 		
-		// Check if token is expired
-		const expiresAt = new Date(session.expiresAt);
-		const now = new Date();
-		
-		// If token is about to expire (within 24 hours), extend it
-		if (expiresAt.getTime() - now.getTime() < 24 * 60 * 60 * 1000) {
-			// Extend the session by 30 days
-			const newExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-			session.expiresAt = newExpiresAt.toISOString();
-			await env.USERS.get(env.USERS.idFromName(`user-${token.split('-')[0] || 'unknown'}`)).storage.put("session", session);
-		}
-		
-		// Get user data
-		const userData = await env.USERS.get(env.USERS.idFromName(`user-${token.split('-')[0] || 'unknown'}`)).storage.get("userData");
-		if (!userData) {
-			return jsonResponse({ valid: false, error: 'User not found' }, 404, request);
-		}
-		
-		// Token is valid
-		return jsonResponse({
-			valid: true,
-			user: {
-				username: userData.username,
-				email: userData.email
+		// Call the validate method on the Forum Object
+		try {
+			const response = await forumObj.fetch(doURL.toString(), {
+				method: 'GET',
+				headers
+			});
+			
+			if (response.status === 200) {
+				return response;
 			}
-		}, 200, request);
+		} catch (error) {
+			console.error('Error validating with forum object:', error);
+			// Fall through to try individual user validation
+		}
+		
+		// If we got here, the forum object couldn't validate the token.
+		// This could happen if sessions aren't synced properly.
+		// As a last resort, we'll have to check each user one by one.
+		
+		console.log("Forum validation failed, trying to find the user directly...");
+		// We need to find which user has this token by checking with the user object
+		// This is inefficient but works as a fallback
+		
+		// In a real app, you would keep track of which user has which token
+		// For this simple app, we'll just use a simple heuristic - try the username in the token
+		// (This assumes the token has something to do with the username, which isn't secure)
+		
+		// Extract a username from the token (hacky, but useful for demo)
+		// This is a very basic approach that only works if token is uuid-like
+		const possibleUsername = token.split('-')[0];
+		if (possibleUsername) {
+			try {
+				const userId = env.USERS.idFromName(`user-${possibleUsername}`);
+				const userObj = env.USERS.get(userId);
+				
+				const userValidateURL = new URL(requestURL.origin);
+				userValidateURL.pathname = "/validate";
+				
+				const userResponse = await userObj.fetch(userValidateURL.toString(), {
+					method: 'GET',
+					headers
+				});
+				
+				if (userResponse.status === 200) {
+					return userResponse;
+				}
+			} catch (error) {
+				console.error(`Error validating token for user ${possibleUsername}:`, error);
+				// Fall through to invalid response
+			}
+		}
+		
+		// If all validation attempts fail
+		return jsonResponse({ valid: false, error: 'Invalid token' }, 401, request);
 	} catch (error) {
 		console.error('Validation error:', error);
 		return jsonResponse({ valid: false, error: error.message }, 500, request);
@@ -631,14 +669,8 @@ export class UsersObject extends DurableObject {
 		
 		// Check if token is expired
 		const expiresAt = new Date(session.expiresAt);
-		const now = new Date();
-		
-		// If token is about to expire (within 24 hours), extend it
-		if (expiresAt.getTime() - now.getTime() < 24 * 60 * 60 * 1000) {
-			// Extend the session by 30 days
-			const newExpiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-			session.expiresAt = newExpiresAt.toISOString();
-			await this.state.storage.put("session", session);
+		if (expiresAt < new Date()) {
+			return this.corsResponse({ valid: false, error: 'Token expired' }, 401, request);
 		}
 		
 		// Get user data
