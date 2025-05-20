@@ -6,8 +6,6 @@
   --mobile-body-padding-tablet: 10px 0;
   --mobile-body-padding-phone: 5px 0;
   --mobile-page-width-tablet: 98%;
-  --mobile-page-padding-top-tablet: 40px;
-  --mobile-page-padding-top-phone: 30px;
   --mobile-content-padding-phone: 8px;
 }
 
@@ -21,7 +19,6 @@
   
   .page {
     width: var(--mobile-page-width-tablet);
-    padding-top: var(--mobile-page-padding-top-tablet);
   }
   
   /* ASCII Art */
@@ -30,11 +27,6 @@
     transform: scale(0.95);
     transform-origin: center top;
     padding-top: 40px;
-  }
-  
-  /* Forum */
-  .page {
-    padding-top: 70px !important;
   }
 }
 
@@ -55,10 +47,6 @@
   /* Layout */
   body {
     padding: var(--mobile-body-padding-phone);
-  }
-  
-  .page {
-    padding-top: var(--mobile-page-padding-top-phone);
   }
   
   .content {

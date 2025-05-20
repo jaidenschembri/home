@@ -1,0 +1,90 @@
+/* Login prompt styles */
+#login-prompt {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.login-prompt-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.login-prompt-content {
+    border: 1px solid var(--color-fg);
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    background-color: var(--color-bg);
+    box-sizing: border-box;
+}
+
+.login-prompt-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: var(--header-height);
+    border-bottom: 1px solid var(--color-fg);
+    color: var(--color-fg);
+    padding: 0 10px;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.login-prompt-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: normal;
+    text-transform: lowercase;
+}
+
+.login-prompt-message {
+    color: var(--color-fg);
+    font-size: var(--content-font-size);
+    margin: 15px;
+    line-height: var(--content-line-height);
+    font-family: var(--base-font);
+}
+
+.login-prompt-button {
+    color: var(--color-fg);
+    font-size: 12px;
+    font-style: italic;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-bottom: 20px;
+    cursor: pointer;
+    font-family: var(--base-font);
+}
+
+.login-prompt-button:hover {
+    text-decoration: underline;
+}
+
+/* Light theme overrides */
+body.light-theme .login-prompt-content {
+    border-color: var(--color-border);
+    background-color: var(--color-bg);
+}
+
+body.light-theme .login-prompt-title-bar {
+    border-bottom-color: var(--color-border);
+    color: var(--color-fg);
+}
+
+body.light-theme .login-prompt-message {
+    color: var(--color-fg);
+}
+
+body.light-theme .login-prompt-button {
+    color: var(--color-fg);
+} 

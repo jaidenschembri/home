@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="css/mobile.css">
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/forum.css">
+  <link rel="stylesheet" href="css/login-prompt.css">
 </head>
 <body>
   <canvas id="space-bg"></canvas>
@@ -39,12 +40,17 @@
       </div>
       <div class="title-bar signin-title-bar">
         <div class="nav-links">
-          <a href="index.html" class="nav-link">Home</a><a href="forum.html" class="nav-link">Forum</a>
+          <a href="index.html" class="nav-link">Home</a><a href="forum.html" class="nav-link">Forum</a><a href="shop.html" class="nav-link">Shop</a>
         </div>
         <button class="signin-btn">Sign in</button>
         <div class="signed-in-text" style="display: none;">Signed in as <span class="username"></span></div>
       </div>
     </header>
+
+    <!-- Login Prompt Container -->
+    <div id="login-prompt" style="display: none;">
+      <!-- Login prompt will be injected here -->
+    </div>
 
     <div class="window forum-container">
       <div class="content">

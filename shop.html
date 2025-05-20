@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - NoJava</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/login-prompt.css">
+</head>
+<body>
+    <canvas id="space-bg"></canvas>
+
+    <div class="page">
+        <header class="header-window">
+            <div class="title-bar">
+                <span class="title-text">Shop</span>
+                <div id="theme-toggle" title="Toggle Theme">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20">
+                        <g class="sun-moon dark" id="toggleIcon">
+                            <path class="moon moon-path" d="M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50" />
+                            <circle class="sun sun-path" cx="50" cy="50" r="20" />
+                            <g class="rays">
+                                <line x1="50" y1="20" x2="50" y2="15" stroke-dasharray="20" stroke-dashoffset="0" />
+                                <line x1="50" y1="80" x2="50" y2="85" stroke-dasharray="20" stroke-dashoffset="0" />
+                                <line x1="20" y1="50" x2="15" y2="50" stroke-dasharray="20" stroke-dashoffset="0" />
+                                <line x1="80" y1="50" x2="85" y2="50" stroke-dasharray="20" stroke-dashoffset="0" />
+                                <line x1="29" y1="29" x2="25" y2="25" stroke-dasharray="20" stroke-dashoffset="0" />
+                                <line x1="71" y1="71" x2="75" y2="75" stroke-dasharray="20" stroke-dashoffset="0" />
+                                <line x1="29" y1="71" x2="25" y2="75" stroke-dasharray="20" stroke-dashoffset="0" />
+                                <line x1="71" y1="29" x2="75" y2="25" stroke-dasharray="20" stroke-dashoffset="0" />
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="title-bar signin-title-bar">
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a><a href="forum.html" class="nav-link">Forum</a><a href="shop.html" class="nav-link">Shop</a>
+                </div>
+                <button class="signin-btn">Sign in</button>
+                <div class="signed-in-text" style="display: none;">Signed in as <span class="username"></span></div>
+            </div>
+        </header>
+
+        <!-- Login Prompt Container -->
+        <div id="login-prompt" style="display: none;">
+          <!-- Login prompt will be injected here -->
+        </div>
+
+        <div class="window shop-container">
+            <div class="content">
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+    <script src="js/shop.js" type="module"></script>
+
+    <!-- Modal overlay for auth modal -->
+    <div id="auth-modal-overlay" class="modal-overlay"></div>
+
+    <!-- Sign In/Sign Up Modal -->
+    <div id="auth-modal" class="window">
+        <div class="title-bar">
+            <span id="auth-modal-title">Sign In</span>
+            <button id="auth-modal-close">✕</button>
+        </div>
+        <div class="content">
+            <form id="loginForm">
+                <input type="text" id="loginUsername" required placeholder="Username">
+                <input type="password" id="loginPassword" required placeholder="Password">
+                <button type="submit" class="auth-text-btn">Sign In</button>
+            </form>
+            <div id="show-register-link">
+                Don't have an account? <a href="#" id="show-register">Sign up</a>
+            </div>
+            <form id="registerForm">
+                <input type="email" id="regEmail" required placeholder="Email">
+                <input type="text" id="regUsername" required placeholder="Username">
+                <input type="text" id="regInvite" required placeholder="Invite Code">
+                <input type="password" id="regPassword" required placeholder="Password">
+                <button type="submit" class="auth-text-btn">Sign Up</button>
+            </form>
+            <div id="show-login-link">
+                Already have an account? <a href="#" id="show-login">Sign in</a>
+            </div>
+            <div id="auth-response"></div>
+        </div>
+    </div>
+</body>
+</html> 
