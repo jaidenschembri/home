@@ -162,6 +162,16 @@ function initForum() {
                                     <form id="postForm">
                                         <input type="text" id="threadSubject" placeholder="Subject (optional)" maxlength="100">
                                         <textarea id="postContent" placeholder="What's on your mind?" required></textarea>
+                                        <div class="image-upload-container">
+                                            <label for="postImage" class="image-upload-label">
+                                                Add image
+                                            </label>
+                                            <input type="file" id="postImage" class="image-upload-input" accept="image/*">
+                                            <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                                                <img id="imagePreview" class="image-preview">
+                                                <button type="button" id="removeImage" class="remove-image-btn">✕</button>
+                                            </div>
+                                        </div>
                                         <button type="submit" class="post-btn">Submit Post</button>
                                         <div id="post-response" class="post-response"></div>
                                     </form>
@@ -226,6 +236,9 @@ function initForum() {
             elements.adminModeBtn.addEventListener('click', toggleAdminMode);
             console.log('Admin mode button re-initialized');
         }
+        
+        // Reinitialize image upload handlers
+        setupImageUploadHandlers();
     }
     
     async function loadPosts() {
