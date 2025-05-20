@@ -23,6 +23,8 @@ export async function checkAuthentication(API_URL, elements, title = 'Forum', me
     // If username is stored and sign in text is displayed, user is authenticated
     if (isDisplayed && storedUsername) {
         console.log("User is already authenticated as:", storedUsername);
+        // Trigger a background token refresh without waiting for it
+        refreshTokenInBackground(API_URL, token);
         return true;
     }
     
@@ -57,7 +59,13 @@ export async function checkAuthentication(API_URL, elements, title = 'Forum', me
         }
     } catch (error) {
         console.error('Error validating token:', error);
-        // On network errors, show error message
+        // On network errors, don't automatically log the user out
+        if (storedUsername) {
+            console.log("Network error but keeping user session active");
+            return true;
+        }
+        
+        // If we have no username stored, show error message
         if (elements.forumContainer) {
             elements.forumContainer.querySelector('.content').innerHTML = `
                 <div class="error-message">
@@ -67,6 +75,25 @@ export async function checkAuthentication(API_URL, elements, title = 'Forum', me
         }
         return false;
     }
+}
+
+// Function to refresh token in the background without affecting user experience
+function refreshTokenInBackground(API_URL, token) {
+    fetch(`${API_URL}/api/validate`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        mode: 'cors'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Background token refresh result:", data.valid ? "success" : "failed");
+    })
+    .catch(error => {
+        console.error("Background token refresh error:", error);
+    });
 }
 
 // Login prompt template

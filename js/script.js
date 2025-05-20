@@ -8,7 +8,8 @@ const CONFIG = {
     STAR_COUNT: 100,
     STAR_MIN_RADIUS: 0.5,
     STAR_MAX_RADIUS: 1.5,
-    STAR_SPEED: 0.2
+    STAR_SPEED: 0.2,
+    TOKEN_REFRESH_INTERVAL: 30 * 60 * 1000 // 30 minutes
 };
 
 // Utility functions
@@ -167,6 +168,7 @@ const AuthManager = {
     signedInText: null,
     usernameSpan: null,
     tokenRefreshInterval: null,
+    tokenRefreshTimeout: null,
 
     init() {
         console.log('Using API URL:', CONFIG.API_URL);
@@ -243,28 +245,25 @@ const AuthManager = {
                     localStorage.setItem('username', data.user.username);
                     this.showSignedInState(data.user.username);
                     
-                    // Set token refresh schedule - check every 12 hours
-                    if (!this.tokenRefreshInterval) {
-                        this.tokenRefreshInterval = setInterval(() => {
-                            this.refreshAuthToken();
-                        }, 12 * 60 * 60 * 1000); // 12 hours
-                    }
+                    // Set token refresh schedule - check every 30 minutes
+                    this.setupTokenRefresh();
+                    
+                    document.dispatchEvent(new CustomEvent('userLoggedIn', {
+                        detail: { username: data.user.username }
+                    }));
                 } else {
+                    // Token is invalid
                     localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
                     localStorage.removeItem('username');
                     this.showSignedOutState();
-                    this.clearTokenRefresh();
                 }
             } catch (error) {
                 console.error('Error validating token:', error);
-                localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
-                localStorage.removeItem('username');
-                this.showSignedOutState();
-                this.clearTokenRefresh();
+                // Don't immediately log out on network errors
+                // We'll retry on next page load
             }
         } else {
             this.showSignedOutState();
-            this.clearTokenRefresh();
         }
     },
 
@@ -406,11 +405,8 @@ const AuthManager = {
                 
                 this.showSignedInState(data.user.username);
                 
-                // Start token refresh interval
-                this.clearTokenRefresh(); // Clear any existing interval
-                this.tokenRefreshInterval = setInterval(() => {
-                    this.refreshAuthToken();
-                }, 12 * 60 * 60 * 1000); // 12 hours
+                // Start token refresh
+                this.setupTokenRefresh();
                 
                 document.dispatchEvent(new CustomEvent('userLoggedIn', {
                     detail: { username: data.user.username }
@@ -450,6 +446,45 @@ const AuthManager = {
         return true;
     },
 
+    // Setup token refresh system
+    setupTokenRefresh() {
+        this.clearTokenRefresh(); // Clear any existing refresh mechanisms
+        
+        // Set an immediate refresh
+        this.refreshAuthToken();
+        
+        // Set up interval for regular refreshes
+        this.tokenRefreshInterval = setInterval(() => {
+            this.refreshAuthToken();
+        }, CONFIG.TOKEN_REFRESH_INTERVAL);
+        
+        // Also refresh on user activity
+        this.setupActivityRefresh();
+    },
+    
+    // Set up refresh on user activity
+    setupActivityRefresh() {
+        const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+        
+        const refreshOnActivity = () => {
+            // Clear existing timeout if there is one
+            if (this.tokenRefreshTimeout) {
+                clearTimeout(this.tokenRefreshTimeout);
+            }
+            
+            // Set a timeout to refresh the token after a brief delay
+            // This prevents multiple refreshes when user is continuously active
+            this.tokenRefreshTimeout = setTimeout(() => {
+                this.refreshAuthToken();
+            }, 5000);
+        };
+        
+        // Add event listeners
+        activityEvents.forEach(event => {
+            document.addEventListener(event, refreshOnActivity, { passive: true });
+        });
+    },
+
     // Refresh auth token to extend session
     async refreshAuthToken() {
         const token = localStorage.getItem(CONFIG.AUTH_TOKEN_KEY);
@@ -459,6 +494,7 @@ const AuthManager = {
         }
         
         try {
+            console.log('Refreshing authentication token...');
             // This endpoint validates the token which effectively refreshes the session
             const data = await Utils.fetchWithErrorHandling(`${CONFIG.API_URL}/api/validate`, {
                 method: 'GET',
@@ -471,10 +507,13 @@ const AuthManager = {
             
             if (!data.valid) {
                 // If token becomes invalid, remove it and clear interval
+                console.log('Token is no longer valid, logging out');
                 localStorage.removeItem(CONFIG.AUTH_TOKEN_KEY);
                 localStorage.removeItem('username');
                 this.showSignedOutState();
                 this.clearTokenRefresh();
+            } else {
+                console.log('Token refreshed successfully');
             }
         } catch (error) {
             console.error('Error refreshing token:', error);
@@ -486,6 +525,11 @@ const AuthManager = {
         if (this.tokenRefreshInterval) {
             clearInterval(this.tokenRefreshInterval);
             this.tokenRefreshInterval = null;
+        }
+        
+        if (this.tokenRefreshTimeout) {
+            clearTimeout(this.tokenRefreshTimeout);
+            this.tokenRefreshTimeout = null;
         }
     }
 };
