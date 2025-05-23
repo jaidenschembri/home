@@ -45,7 +45,8 @@
 }
 
 #threadSubject::placeholder,
-#postContent::placeholder {
+#postContent::placeholder,
+.reply-content::placeholder {
   font-style: italic;
 }
 
