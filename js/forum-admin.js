@@ -23,7 +23,7 @@ async function deleteReply(threadId, replyId) {
     try {
         const token = localStorage.getItem('authToken');
         if (!token) {
-            alert('You must be logged in as admin to delete replies');
+            alert('You must be an admin to delete replies');
             return;
         }
         

@@ -19,23 +19,26 @@
     <header class="header-window">
       <div class="title-bar">
         <span class="title-text">Forum</span>
-        <div id="theme-toggle" title="Toggle Theme">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20">
-            <g class="sun-moon dark" id="toggleIcon">
-              <path class="moon moon-path" d="M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50" />
-              <circle class="sun sun-path" cx="50" cy="50" r="20" />
-              <g class="rays">
-                <line x1="50" y1="20" x2="50" y2="15" stroke-dasharray="20" stroke-dashoffset="0" />
-                <line x1="50" y1="80" x2="50" y2="85" stroke-dasharray="20" stroke-dashoffset="0" />
-                <line x1="20" y1="50" x2="15" y2="50" stroke-dasharray="20" stroke-dashoffset="0" />
-                <line x1="80" y1="50" x2="85" y2="50" stroke-dasharray="20" stroke-dashoffset="0" />
-                <line x1="29" y1="29" x2="25" y2="25" stroke-dasharray="20" stroke-dashoffset="0" />
-                <line x1="71" y1="71" x2="75" y2="75" stroke-dasharray="20" stroke-dashoffset="0" />
-                <line x1="29" y1="71" x2="25" y2="75" stroke-dasharray="20" stroke-dashoffset="0" />
-                <line x1="71" y1="29" x2="75" y2="25" stroke-dasharray="20" stroke-dashoffset="0" />
+        <div class="title-bar-controls">
+          <div id="theme-toggle" title="Toggle Theme">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20">
+              <g class="sun-moon dark" id="toggleIcon">
+                <path class="moon moon-path" d="M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50" />
+                <circle class="sun sun-path" cx="50" cy="50" r="20" />
+                <g class="rays">
+                  <line x1="50" y1="20" x2="50" y2="15" stroke-dasharray="20" stroke-dashoffset="0" />
+                  <line x1="50" y1="80" x2="50" y2="85" stroke-dasharray="20" stroke-dashoffset="0" />
+                  <line x1="20" y1="50" x2="15" y2="50" stroke-dasharray="20" stroke-dashoffset="0" />
+                  <line x1="80" y1="50" x2="85" y2="50" stroke-dasharray="20" stroke-dashoffset="0" />
+                  <line x1="29" y1="29" x2="25" y2="25" stroke-dasharray="20" stroke-dashoffset="0" />
+                  <line x1="71" y1="71" x2="75" y2="75" stroke-dasharray="20" stroke-dashoffset="0" />
+                  <line x1="29" y1="71" x2="25" y2="75" stroke-dasharray="20" stroke-dashoffset="0" />
+                  <line x1="71" y1="29" x2="75" y2="25" stroke-dasharray="20" stroke-dashoffset="0" />
+                </g>
               </g>
-            </g>
-          </svg>
+            </svg>
+          </div>
+          <button id="menu-btn" class="title-bar-btn">Menu</button>
         </div>
       </div>
       <div class="title-bar signin-title-bar">
@@ -132,5 +135,24 @@
       <div id="auth-response"></div>
     </div>
   </div>
+
+  <!-- Menu Modal -->
+  <div id="menu-modal" class="window">
+    <div class="title-bar">
+      <span id="menu-modal-title">menu</span>
+      <button id="menu-modal-close">✕</button>
+    </div>
+    <div class="content">
+      <div class="menu-items">
+        <a href="index.html" class="menu-item">Home</a>
+        <a href="forum.html" class="menu-item">Forum</a>
+        <a href="shop.html" class="menu-item">Shop</a>
+        <a href="https://x.com/jaiddog33" target="_blank" class="menu-item">Contact</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu modal overlay -->
+  <div id="menu-modal-overlay" class="modal-overlay"></div>
 </body>
 </html> 

@@ -124,7 +124,7 @@ body.light-theme .signed-in-text {
   color: var(--color-fg);
 }
 
-/* === LIGHT THEME MODAL OVERRIDES (moved from base.css) === */
+/* === LIGHT THEME MODAL OVERRIDES === */
 body.light-theme #auth-modal {
   background: #ffffff !important;
   backdrop-filter: none !important;
@@ -155,6 +155,27 @@ body.light-theme #auth-modal .content button:hover {
 
 body.light-theme #auth-modal .content input::placeholder {
   color: var(--modal-placeholder-fg-light);
+}
+
+/* === MENU MODAL THEME OVERRIDES === */
+body.light-theme #menu-modal {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  border: 1px solid var(--modal-border-light);
+}
+
+body.light-theme #menu-modal .title-bar {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  border-bottom: 1px solid var(--modal-title-border-light);
+}
+
+body.light-theme .menu-item {
+  color: var(--modal-btn-fg-light);
+}
+
+body.light-theme .title-bar-btn {
+  color: var(--color-fg);
 }
 
 /* Theme Toggle Styles */

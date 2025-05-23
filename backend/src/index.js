@@ -1442,3 +1442,4 @@ async function handleLogout(request, env) {
 		return jsonResponse({ success: true }, 200, request);
 	}
 }
+

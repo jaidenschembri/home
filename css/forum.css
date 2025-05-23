@@ -3,18 +3,16 @@
 /* Container elements */
 .post-form-window, 
 .forum-container {
-  margin-top: 20px;
+  margin: 20px 0;
   max-width: 800px;
   width: 100%;
-  margin-bottom: 20px;
 }
 
 .forum-container {
-  border: none !important; /* Remove border from container */
+  border: none !important;
 }
 
 .post-form-window {
-  margin-bottom: 20px;
   background-color: var(--window-bg);
   border: 1px solid var(--border-color);
 }
@@ -33,43 +31,37 @@
 }
 
 /* Form inputs */
-#threadSubject {
-  margin-bottom: 10px;
-  padding: 8px;
+#threadSubject,
+#postContent,
+.reply-content {
+  width: 100%;
   font-family: var(--base-font);
   border: 1px solid var(--color-fg);
   background-color: var(--window-bg);
   color: var(--text-color);
-  border-radius: 2px;
-  width: 100%;
+  margin-bottom: 10px;
   box-sizing: border-box;
+  border-radius: 2px;
+}
+
+#threadSubject::placeholder,
+#postContent::placeholder {
+  font-style: italic;
+}
+
+#threadSubject {
+  padding: 8px;
 }
 
 #postContent {
-  width: 100%;
   padding: 10px;
-  font-family: var(--base-font);
-  border: 1px solid var(--color-fg);
-  background-color: var(--window-bg);
-  color: var(--text-color);
-  margin-bottom: 10px;
   resize: vertical;
-  box-sizing: border-box;
-  border-radius: 2px;
   min-height: 100px;
 }
 
 .reply-content {
-  width: 100%;
   padding: 8px;
-  font-family: var(--base-font);
-  border: 1px solid var(--color-fg);
-  background-color: var(--window-bg);
-  color: var(--text-color);
-  margin-bottom: 10px;
   resize: vertical;
-  box-sizing: border-box;
-  border-radius: 2px;
   min-height: 80px;
 }
 
@@ -90,10 +82,6 @@
   font-size: 13px;
   padding: 0;
   margin: 0;
-}
-
-.post-btn,
-.reply-btn {
   align-self: flex-end;
 }
 
@@ -143,33 +131,33 @@
   background-color: transparent;
 }
 
-.post-username {
+.post-username,
+.thread-subject {
   font-weight: bold;
   color: var(--accent-color);
-  margin-right: 0;
   font-family: var(--base-font);
+}
+
+.post-username {
+  margin-right: 0;
+}
+
+.thread-subject {
+  display: block;
+  margin-top: 3px;
 }
 
 .post-timestamp {
   color: var(--text-secondary);
   font-size: 12px;
-  margin-right: 5px;
-  margin-left: 5px;
-  font-family: var(--base-font);
-}
-
-.thread-subject {
-  font-weight: bold;
-  color: var(--accent-color);
-  display: block;
-  margin-top: 3px;
+  margin: 0 5px;
   font-family: var(--base-font);
 }
 
 .post-content {
   white-space: pre-wrap;
   word-break: break-word;
-  padding: 0 10px 10px 10px;
+  padding: 0 10px 10px;
   font-size: 13px;
   line-height: 1.4;
   color: var(--text-color);
@@ -194,7 +182,7 @@
 }
 
 .reply-form {
-  display: none; /* Hidden by default */
+  display: none;
   background-color: var(--window-bg);
   padding: 10px;
   margin-top: 10px;
@@ -248,23 +236,19 @@
   box-shadow: none !important;
 }
 
-.navigation-links a {
+.navigation-links a,
+.nav-link {
   color: var(--text-color);
   font-size: 12px;
   text-decoration: none;
 }
 
-.navigation-links a:hover {
-  text-decoration: underline;
-}
-
 .nav-link {
   color: var(--header-fg);
-  font-size: 12px;
-  text-decoration: none;
   cursor: pointer;
 }
 
+.navigation-links a:hover,
 .nav-link:hover {
   text-decoration: underline;
 }
@@ -272,7 +256,7 @@
 /* Images */
 .post-image {
   display: block;
-  margin: 5px 0 10px 0;
+  margin: 5px 0 10px;
   max-width: 300px;
   max-height: 300px;
   border: none;
@@ -303,7 +287,6 @@
 
 .image-upload-label:hover {
   color: var(--accent-hover);
-  background: none;
 }
 
 .image-upload-input {
@@ -490,14 +473,6 @@ body.light-theme .post-btn {
   padding-top: 70px !important;
 }
 
-@media screen and (max-width: 1000px),
-       screen and (max-width: 600px),
-       screen and (max-width: 400px) {
-  .page {
-    padding-top: 70px !important;
-  }
-}
-
 @media (max-width: 768px) {
   .header-window {
     position: fixed;
@@ -509,11 +484,7 @@ body.light-theme .post-btn {
 }
 
 @media (max-width: 600px) {
-  .image-preview {
-    max-width: 150px;
-    max-height: 150px;
-  }
-  
+  .image-preview,
   .post-image {
     max-width: 150px;
     max-height: 150px;

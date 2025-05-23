@@ -534,9 +534,62 @@ const AuthManager = {
     }
 };
 
+// Menu Modal
+const MenuManager = {
+    modal: null,
+    overlay: null,
+    openBtn: null,
+    closeBtn: null,
+
+    init() {
+        this.modal = document.getElementById('menu-modal');
+        this.overlay = document.getElementById('menu-modal-overlay');
+        this.openBtn = document.getElementById('menu-btn');
+        this.closeBtn = document.getElementById('menu-modal-close');
+
+        if (!this.modal || !this.overlay || !this.openBtn || !this.closeBtn) {
+            console.error("Menu elements not found");
+            return;
+        }
+
+        this.setupEventListeners();
+    },
+
+    setupEventListeners() {
+        this.openBtn.addEventListener('click', () => this.showModal());
+        this.closeBtn.addEventListener('click', () => this.hideModal());
+        this.overlay.addEventListener('click', () => this.hideModal());
+    },
+
+    showModal() {
+        this.modal.style.display = 'block';
+        this.overlay.style.display = 'block';
+        this.modal.style.opacity = 1;
+        this.overlay.style.opacity = 1;
+    },
+
+    hideModal() {
+        const fadeEffect = setInterval(() => {
+            if (!this.modal.style.opacity) {
+                this.modal.style.opacity = 1;
+                this.overlay.style.opacity = 1;
+            }
+            if (this.modal.style.opacity > 0) {
+                this.modal.style.opacity -= 0.1;
+                this.overlay.style.opacity -= 0.1;
+            } else {
+                clearInterval(fadeEffect);
+                this.modal.style.display = 'none';
+                this.overlay.style.display = 'none';
+            }
+        }, CONFIG.MODAL_FADE_INTERVAL);
+    }
+};
+
 // Main initialization
 window.addEventListener('DOMContentLoaded', () => {
     ThemeManager.init();
     StarfieldManager.init();
     AuthManager.init();
+    MenuManager.init();
 });
