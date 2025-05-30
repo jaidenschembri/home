@@ -7,8 +7,7 @@ export async function handleThreadSubmission(e, elements, API_URL, postsCache, a
     // Check if user is logged in
     const token = localStorage.getItem('authToken');
     if (!token) {
-        elements.postResponse.textContent = "You must be signed in to post.";
-        elements.postResponse.className = "post-response error";
+        console.error("User must be signed in to post");
         return;
     }
     
@@ -27,29 +26,26 @@ export async function handleThreadSubmission(e, elements, API_URL, postsCache, a
         // Check file size (max 100MB)
         const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
         if (imageFile.size > MAX_FILE_SIZE) {
-            elements.postResponse.textContent = "Image file too large. Maximum size is 100MB.";
-            elements.postResponse.className = "post-response error";
+            console.error("Image file too large. Maximum size is 100MB.");
             return;
         }
         
         // Check file type
         if (!imageFile.type.startsWith('image/')) {
-            elements.postResponse.textContent = "Invalid file type. Only images are allowed.";
-            elements.postResponse.className = "post-response error";
+            console.error("Invalid file type. Only images are allowed.");
             return;
         }
     }
     
     // Require either content or an image
     if (!content && !imageFile) {
-        elements.postResponse.textContent = "Please enter text or attach an image.";
-        elements.postResponse.className = "post-response error";
+        console.error("Please enter text or attach an image.");
         return;
     }
     
     try {
-        elements.postResponse.textContent = "Creating thread...";
-        elements.postResponse.className = "post-response";
+        // Log status to console instead of showing user message
+        console.log("Creating thread...");
         
         // Create form data if we have an image
         let requestBody;
@@ -105,7 +101,7 @@ export async function handleThreadSubmission(e, elements, API_URL, postsCache, a
         console.log('API response for post creation:', data, 'Status:', response.status);
         
         if (response.ok) {
-            // Clear form and show success message
+            // Clear form
             elements.postContent.value = '';
             document.getElementById('threadSubject').value = '';
             
@@ -118,8 +114,8 @@ export async function handleThreadSubmission(e, elements, API_URL, postsCache, a
                 }
             }
             
-            elements.postResponse.textContent = "Thread created successfully!";
-            elements.postResponse.className = "post-response success";
+            // Log success to console instead of showing user message
+            console.log("Thread created successfully!");
             
             // Add the new thread to the list and cache
             const newThread = data.thread || {
@@ -136,12 +132,6 @@ export async function handleThreadSubmission(e, elements, API_URL, postsCache, a
             addThreadToList(newThread, elements, window.forumState?.adminMode || false);
             postsCache.unshift(newThread);
             
-            // Clear success message after 3 seconds
-            setTimeout(() => {
-                elements.postResponse.textContent = "";
-                elements.postResponse.className = "post-response";
-            }, 3000);
-            
             // Reload posts after a short delay to confirm thread was saved
             setTimeout(() => {
                 if (typeof window.loadPosts === 'function') {
@@ -151,8 +141,8 @@ export async function handleThreadSubmission(e, elements, API_URL, postsCache, a
         }
     } catch (error) {
         console.error('Error creating thread:', error);
-        elements.postResponse.textContent = error.message;
-        elements.postResponse.className = "post-response error";
+        // Log error to console instead of showing user message
+        console.error('Thread creation failed:', error.message);
     }
 }
 

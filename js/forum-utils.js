@@ -2,6 +2,14 @@
 
 // Escape HTML to prevent XSS
 export function escapeHTML(str) {
+    // Handle null, undefined, or non-string values
+    if (str == null) {
+        return '';
+    }
+    
+    // Convert to string if it's not already
+    str = String(str);
+    
     return str
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -12,7 +20,13 @@ export function escapeHTML(str) {
 
 // Process text for greentext and links
 export function processGreentextAndLinks(text) {
-    if (!text) return '';
+    // Handle null, undefined, or non-string values
+    if (text == null) {
+        return '';
+    }
+    
+    // Convert to string if it's not already
+    text = String(text);
     
     // Escape HTML first
     let processed = escapeHTML(text);
@@ -37,7 +51,16 @@ export function extractImageHtml(content, imageUrl = null) {
     }
     
     // Otherwise, look for image URLs in the content
-    if (!content) return '';
+    // Handle null, undefined, or non-string content
+    if (content == null) {
+        return '';
+    }
+    
+    // Convert to string and trim
+    content = String(content).trim();
+    if (content === '') {
+        return '';
+    }
     
     // Find image URL in content (basic pattern matching)
     const imgMatch = content.match(/(https?:\/\/.*?\.(?:png|jpg|jpeg|gif|webp))/i);

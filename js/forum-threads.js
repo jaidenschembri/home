@@ -73,6 +73,16 @@ export function addThreadToList(thread, elements, adminMode) {
                 }
             });
         }
+        
+        // Add event listeners for reply delete buttons
+        const replyDeleteBtns = threadElement.querySelectorAll('.delete-reply-btn');
+        replyDeleteBtns.forEach(deleteBtn => {
+            deleteBtn.addEventListener('click', () => {
+                const threadId = deleteBtn.getAttribute('data-thread-id');
+                const replyId = deleteBtn.getAttribute('data-reply-id');
+                deleteReply(threadId, replyId);
+            });
+        });
     }
 }
 
@@ -189,19 +199,10 @@ export async function handleReplySubmission(e) {
     const threadId = replyForm.dataset.threadId;
     const replyContent = replyForm.querySelector('.reply-content')?.value.trim() || '';
     
-    // Get response element, create it if it doesn't exist
-    let replyResponse = replyForm.querySelector('.reply-response');
-    if (!replyResponse) {
-        replyResponse = document.createElement('div');
-        replyResponse.className = 'reply-response';
-        replyForm.appendChild(replyResponse);
-    }
-    
     // Check if user is logged in
     const token = localStorage.getItem('authToken');
     if (!token) {
-        replyResponse.textContent = "You must be signed in to reply.";
-        replyResponse.className = "post-response error";
+        console.error("User must be signed in to reply");
         return;
     }
     
@@ -214,29 +215,26 @@ export async function handleReplySubmission(e) {
         // Check file size (max 100MB)
         const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
         if (imageFile.size > MAX_FILE_SIZE) {
-            replyResponse.textContent = "Image file too large. Maximum size is 100MB.";
-            replyResponse.className = "post-response error";
+            console.error("Image file too large. Maximum size is 100MB.");
             return;
         }
         
         // Check file type
         if (!imageFile.type.startsWith('image/')) {
-            replyResponse.textContent = "Invalid file type. Only images are allowed.";
-            replyResponse.className = "post-response error";
+            console.error("Invalid file type. Only images are allowed.");
             return;
         }
     }
     
     // Require either content or an image
     if (!replyContent && !imageFile) {
-        replyResponse.textContent = "Please enter text or attach an image.";
-        replyResponse.className = "post-response error";
+        console.error("Please enter text or attach an image.");
         return;
     }
     
     try {
-        replyResponse.textContent = "Submitting reply...";
-        replyResponse.className = "post-response";
+        // Log status to console instead of showing user message
+        console.log("Submitting reply...");
         
         // Create form data if we have an image
         let requestBody;
@@ -287,7 +285,7 @@ export async function handleReplySubmission(e) {
         
         const data = await response.json();
         
-        // Clear form and show success message
+        // Clear form
         replyForm.querySelector('.reply-content').value = '';
         
         // Reset image upload if it exists
@@ -299,8 +297,8 @@ export async function handleReplySubmission(e) {
             }
         }
         
-        replyResponse.textContent = "Reply submitted successfully!";
-        replyResponse.className = "post-response success";
+        // Log success to console instead of showing user message
+        console.log("Reply submitted successfully!");
         
         // Add the new reply to the thread
         const repliesContainer = document.querySelector(`.replies-container[data-thread-id="${threadId}"]`);
@@ -316,15 +314,9 @@ export async function handleReplySubmission(e) {
                 window.forumState.postsCache[postIndex].replies.push(data.reply);
             }
         }
-        
-        // Clear success message after 3 seconds
-        setTimeout(() => {
-            replyResponse.textContent = "";
-            replyResponse.className = "post-response";
-        }, 3000);
     } catch (error) {
         console.error('Error submitting reply:', error);
-        replyResponse.textContent = error.message || "Failed to submit reply. Please try again.";
-        replyResponse.className = "post-response error";
+        // Log error to console instead of showing user message
+        console.error('Reply submission failed:', error.message || "Failed to submit reply. Please try again.");
     }
 } 

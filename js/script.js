@@ -355,6 +355,9 @@ const AuthManager = {
         
         if (!this.validateForm(email, username, password)) return;
         
+        // Validate username format before sending to server
+        if (!this.validateUsername(username)) return;
+        
         console.log('Attempting registration with API URL:', CONFIG.API_URL);
         
         try {
@@ -367,14 +370,27 @@ const AuthManager = {
             
             console.log('Registration response data:', data);
             
-            this.responseDiv.textContent = JSON.stringify(data, null, 2);
             if (data.success) {
+                this.responseDiv.className = '';
+                this.responseDiv.textContent = 'Account created successfully! Please sign in.';
                 document.getElementById('loginUsername').value = username;
                 document.getElementById('loginPassword').value = password;
-                this.showLogin();
+                setTimeout(() => {
+                    this.showLogin();
+                }, 1500);
+            } else {
+                // Handle server-side username validation errors
+                if (data.usernameError) {
+                    this.responseDiv.className = '';
+                    this.responseDiv.textContent = 'Username must use lowercase letters only';
+                } else {
+                    this.responseDiv.className = '';
+                    this.responseDiv.textContent = data.error || 'Registration failed';
+                }
             }
         } catch (error) {
             console.error('Registration error:', error);
+            this.responseDiv.className = '';
             this.responseDiv.textContent = `Error: ${error.message}`;
         }
     },
@@ -400,7 +416,7 @@ const AuthManager = {
                 localStorage.setItem(CONFIG.AUTH_TOKEN_KEY, data.token);
                 // Store username for easy access
                 localStorage.setItem('username', data.user.username);
-                this.responseDiv.className = 'auth-success';
+                this.responseDiv.className = '';
                 this.responseDiv.textContent = `Welcome, ${data.user.username}!`;
                 
                 this.showSignedInState(data.user.username);
@@ -428,19 +444,30 @@ const AuthManager = {
                     }, CONFIG.MODAL_FADE_INTERVAL);
                 }, CONFIG.MODAL_FADE_TIMEOUT);
             } else {
-                this.responseDiv.className = 'auth-error';
+                this.responseDiv.className = '';
                 this.responseDiv.textContent = data.error || 'Login failed. Please check your credentials.';
             }
         } catch (error) {
-            this.responseDiv.className = 'auth-error';
+            this.responseDiv.className = '';
             this.responseDiv.textContent = `Error: ${error.message}`;
         }
     },
 
     validateForm(...fields) {
         if (fields.some(field => !field)) {
-            this.responseDiv.className = 'auth-error';
+            this.responseDiv.className = '';
             this.responseDiv.textContent = 'All fields are required';
+            return false;
+        }
+        return true;
+    },
+
+    validateUsername(username) {
+        // Check username rules: one word, all lowercase letters and numbers only
+        const usernameRegex = /^[a-z0-9]+$/;
+        if (!usernameRegex.test(username)) {
+            this.responseDiv.className = '';
+            this.responseDiv.textContent = 'Username must use lowercase letters only';
             return false;
         }
         return true;
