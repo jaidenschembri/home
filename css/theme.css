@@ -32,6 +32,12 @@
   --modal-placeholder-fg: #bbb;
   --auth-btn-fg: inherit;
   --auth-btn-hover-fg: #ccc;
+  
+  /* Letter colors for both themes */
+  --blue-letter-dark: #4da6ff;
+  --blue-letter-light: #0066cc;
+  --red-letter-dark: #ff6666;
+  --red-letter-light: #cc0000;
 }
 
 body:not(.light-theme) {
@@ -190,51 +196,132 @@ body.light-theme .title-bar-btn {
 /* Theme Toggle SVG Styles */
 .moon, .sun, .rays {
   fill: none;
-  stroke-width: 4;
+  stroke-width: 3;
   stroke-linecap: round;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sun {
+  transform-origin: 50px 50px;
+}
+
+.rays line {
+  stroke-width: 2.5;
+  transform-origin: 50px 50px;
 }
 
 /* Animation definitions */
 @keyframes raysFadeIn {
-  from { opacity: 0; stroke-dashoffset: 20; }
-  to { opacity: 1; stroke-dashoffset: 0; }
+  from { 
+    opacity: 0; 
+    stroke-dashoffset: 20;
+    transform: rotate(-45deg) scale(0.8);
+  }
+  to { 
+    opacity: 1; 
+    stroke-dashoffset: 0;
+    transform: rotate(0deg) scale(1);
+  }
 }
 
 @keyframes raysFadeOut {
-  from { opacity: 1; stroke-dashoffset: 0; }
-  to { opacity: 0; stroke-dashoffset: 20; }
+  from { 
+    opacity: 1; 
+    stroke-dashoffset: 0;
+    transform: rotate(0deg) scale(1);
+  }
+  to { 
+    opacity: 0; 
+    stroke-dashoffset: 20;
+    transform: rotate(45deg) scale(0.8);
+  }
 }
 
 @keyframes moonToSun {
-  from { d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50'); }
-  to { d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50'); }
+  from { 
+    d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50');
+    transform: rotate(0deg);
+  }
+  to { 
+    d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50');
+    transform: rotate(180deg);
+  }
 }
 
 @keyframes sunToMoon {
-  from { d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50'); }
-  to { d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50'); }
+  from { 
+    d: path('M 30,50 A 20,20 0 1 0 70,50 A 20,20 0 1 1 30,50');
+    transform: rotate(180deg);
+  }
+  to { 
+    d: path('M 30,50 A 20,20 0 1 0 70,50 A 15,15 0 1 1 30,50');
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sunPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes moonGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px currentColor); }
+  50% { filter: drop-shadow(0 0 4px currentColor); }
 }
 
 /* Dark mode (moon) styles */
-.dark .sun { display: none; }
-.dark .moon { display: block; }
-.dark .rays { opacity: 0; }
+.dark .sun { 
+  display: none; 
+}
+.dark .moon { 
+  display: block;
+  animation: moonGlow 3s ease-in-out infinite;
+}
+.dark .rays { 
+  opacity: 0;
+  transform: rotate(45deg) scale(0.8);
+}
 
 /* Light mode (sun) styles */
-.light .moon { display: none; }
-.light .sun { display: block; }
-.light .rays { opacity: 1; }
+.light .moon { 
+  display: none; 
+}
+.light .sun { 
+  display: block;
+  animation: sunPulse 4s ease-in-out infinite;
+}
+.light .rays { 
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
 
 /* Animation classes */
 .to-light .moon-path {
-  animation: moonToSun 0.5s forwards ease-in-out;
+  animation: moonToSun 0.6s forwards cubic-bezier(0.4, 0, 0.2, 1);
 }
 .to-dark .sun-path {
-  animation: sunToMoon 0.5s forwards ease-in-out;
+  animation: sunToMoon 0.6s forwards cubic-bezier(0.4, 0, 0.2, 1);
 }
 .to-light .rays {
-  animation: raysFadeIn 0.5s forwards ease-in-out;
+  animation: raysFadeIn 0.6s forwards cubic-bezier(0.4, 0, 0.2, 1);
 }
 .to-dark .rays {
-  animation: raysFadeOut 0.5s forwards ease-in-out;
+  animation: raysFadeOut 0.6s forwards cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === COLORED LETTERS === */
+.blue-letter {
+  color: var(--blue-letter-dark);
+}
+
+.red-letter {
+  color: var(--red-letter-dark);
+}
+
+body.light-theme .blue-letter {
+  color: var(--blue-letter-light);
+}
+
+body.light-theme .red-letter {
+  color: var(--red-letter-light);
 }

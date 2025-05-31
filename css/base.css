@@ -8,7 +8,7 @@
   --base-min-width: 1000px;
   --page-width: 95%;
   --page-max-width: 1000px;
-  --header-height: 30px;
+  --header-height: 35px;
   --header-fg: #ffffff;
   --header-border: #ffffff;
   --content-padding: 12px;
@@ -95,7 +95,7 @@ body {
   border-bottom: 1px solid var(--header-border);
   color: var(--header-fg);
   padding: 0 10px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -212,7 +212,7 @@ a:hover {
 /* === TITLE BAR === */
 .title-text {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: normal;
   text-transform: lowercase;
 }
@@ -242,7 +242,7 @@ pre#ascii-art {
   background: none;
   border: none;
   color: var(--signin-btn-fg);
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   padding: 6px 12px;
   margin-top: 0;

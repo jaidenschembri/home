@@ -173,7 +173,7 @@ input:focus {
   background: none;
   border: none;
   color: var(--signin-btn-fg);
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   padding: 6px 18px;
   margin-top: 0;
@@ -200,6 +200,7 @@ input:focus {
   margin-right: 10px;
   display: inline-block;
   transition: text-decoration 0.2s ease;
+  font-size: 14px;
 }
 
 .nav-link:hover {
@@ -210,7 +211,7 @@ input:focus {
 /* Signed In Text */
 .signed-in-text {
   color: var(--signin-btn-fg);
-  font-size: 12px;
+  font-size: 14px;
   padding: 6px 18px;
   margin-top: 0;
   font-family: var(--base-font);
