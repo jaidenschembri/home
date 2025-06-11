@@ -43,14 +43,18 @@ function initShop() {
     //     'You must be signed in to view and purchase items from the shop.'
     // );
     
-    // Initialize PayPal button (will show login prompt if not authenticated)
+    // Initialize PayPal button (no authentication required)
     initializePayPalButton();
     
-    // Listen for successful login to reinitialize PayPal button
+    // COMMENTED OUT - PayPal button reinitialization on login
+    // Since shop is now public, we don't need to reinitialize PayPal on login
+    // Uncomment this if you want to re-enable purchase authentication:
+    /*
     document.addEventListener('userLoggedIn', async () => {
         console.log('Login detected! Reinitializing PayPal button...');
         await initializePayPalButton();
     });
+    */
 
     // Add size selector change handler
     if (elements.sizeSelector) {
@@ -69,12 +73,21 @@ function showShopContent() {
     }
 }
 
+// Track PayPal initialization to prevent double rendering
+let paypalInitialized = false;
+
 // Initialize PayPal button
 async function initializePayPalButton() {
     const container = document.getElementById('paypal-button-container');
     
     if (!container) {
         console.error('PayPal container not found');
+        return;
+    }
+    
+    // Prevent multiple initializations
+    if (paypalInitialized) {
+        console.log('PayPal already initialized, skipping...');
         return;
     }
     
@@ -181,7 +194,10 @@ async function initializePayPalButton() {
             console.log('PayPal payment cancelled by user:', data);
             alert('Payment was cancelled. You can try again anytime.');
         }
-        }).render('#paypal-button-container').catch(err => {
+        }).render('#paypal-button-container').then(() => {
+            console.log('PayPal button rendered successfully');
+            paypalInitialized = true;
+        }).catch(err => {
             console.error('Error rendering PayPal button:', err);
             if (container) {
                 container.innerHTML = '<p style="color: red; text-align: center;">Unable to load payment options</p>';
