@@ -237,22 +237,17 @@
   box-shadow: none !important;
 }
 
-.navigation-links a,
-.nav-link {
+.navigation-links a {
   color: var(--text-color);
   font-size: 14px;
   text-decoration: none;
 }
 
-.nav-link {
-  color: var(--header-fg);
-  cursor: pointer;
-}
-
-.navigation-links a:hover,
-.nav-link:hover {
+.navigation-links a:hover {
   text-decoration: underline;
 }
+
+/* Global nav-link styles are defined in base.css */
 
 /* Images */
 .post-image {

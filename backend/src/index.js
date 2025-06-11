@@ -2,6 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import { handleCorsPreflightRequest } from "./utils/cors.js";
 import { handleLogin, handleRegister, handleValidate, handleLogout } from "./handlers/auth-handlers.js";
 import { handleGetThreads, handleCreateThread, handleCreateReply, handleDeleteThread, handlePurgeAllThreads } from "./handlers/forum-handlers.js";
+import { handleRecordPurchase, handleGetPurchases } from "./handlers/purchase-handlers.js";
 import { UsersObject } from "./auth/users-object.js";
 import { ForumObject } from "./forum/forum-object.js";
 
@@ -80,6 +81,15 @@ export default {
 		
 		if (path === '/api/logout' && request.method === 'POST') {
 			return handleLogout(request, env);
+		}
+
+		// Purchase endpoints
+		if (path === '/api/purchases' && request.method === 'POST') {
+			return handleRecordPurchase(request, env);
+		}
+
+		if (path === '/api/purchases' && request.method === 'GET') {
+			return handleGetPurchases(request, env);
 		}
 
 		// Forum endpoints

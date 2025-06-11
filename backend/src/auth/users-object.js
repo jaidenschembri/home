@@ -230,4 +230,43 @@ export class UsersObject extends DurableObject {
 		
 		return this.corsResponse({ success: true }, 200, request);
 	}
+
+	// Purchase recording functionality
+	async recordPurchase(purchaseData) {
+		try {
+			// Get existing purchases for this user
+			const existingPurchases = await this.state.storage.get("purchases") || [];
+			
+			// Add the new purchase
+			existingPurchases.push(purchaseData);
+			
+			// Store updated purchases
+			await this.state.storage.put("purchases", existingPurchases);
+			
+			console.log(`✅ Purchase recorded for user ${purchaseData.username}:`, purchaseData);
+			return true;
+		} catch (error) {
+			console.error('❌ Error recording purchase:', error);
+			throw error;
+		}
+	}
+
+	async getUserPurchases(username) {
+		try {
+			// Verify this user matches the purchase request
+			const userData = await this.state.storage.get("userData");
+			if (!userData || userData.username !== username) {
+				throw new Error('Unauthorized access to purchase data');
+			}
+			
+			// Get purchases for this user
+			const purchases = await this.state.storage.get("purchases") || [];
+			
+			console.log(`📋 Retrieved ${purchases.length} purchases for user: ${username}`);
+			return purchases;
+		} catch (error) {
+			console.error('❌ Error retrieving purchases:', error);
+			throw error;
+		}
+	}
 } 

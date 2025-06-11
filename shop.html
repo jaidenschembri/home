@@ -6,6 +6,7 @@
     <title>Shop</title>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/mobile.css">
     <link rel="stylesheet" href="css/auth.css">
     <link rel="stylesheet" href="css/login-prompt.css">
@@ -57,20 +58,16 @@
 
         <div class="window shop-container">
             <div class="content">
-                <div class="coming-soon-container">
-                    <div class="coming-soon-box">[Coming soon...]</div>
-                </div>
-
-                <!-- Original shop content preserved below
-                <div class="products-grid">
-                    <div class="product-card">
-                        <div class="product-image">
-                            <img src="images/unisex-classic-tee-white-front-68104b731e6cf.jpg" alt="Say Yes to HVN T-Shirt" id="tshirt-preview">
+                <div class="products-grid grid grid-2">
+                    <div class="product-card card">
+                        <div class="product-image img-container">
+                            <img src="images/t-12.jpg" alt="Say Yes to HVN T-Shirt" id="tshirt-preview" class="img-responsive">
                         </div>
-                        <p class="price">$24.99</p>
-                        <div class="size-selector">
-                            <label for="tshirt-size">Size:</label>
-                            <select id="tshirt-size">
+                        <h3 class="card-title">Crucifix Hoodie</h3>
+                        <p class="price">$80.00</p>
+                        <div class="size-selector form-group">
+                            <label for="tshirt-size" class="form-label">Size:</label>
+                            <select id="tshirt-size" class="form-select">
                                 <option value="S">Small</option>
                                 <option value="M">Medium</option>
                                 <option value="L">Large</option>
@@ -81,13 +78,11 @@
                         <div id="paypal-button-container"></div>
                     </div>
                 </div>
-                -->
             </div>
         </div>
     </div>
 
-    <!-- PayPal SDK -->
-    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD"></script>
+    <!-- PayPal SDK will be loaded dynamically -->
     <script src="js/script.js"></script>
     <script src="js/shop.js" type="module"></script>
 

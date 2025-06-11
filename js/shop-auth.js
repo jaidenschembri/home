@@ -1,3 +1,7 @@
+// COMMENTED OUT - Shop authentication enforcement
+// Uncomment the code below to re-enable authentication requirement for shop viewing
+
+/*
 import { checkAuthentication } from './forum-auth.js';
 import { LOGIN_PROMPT_TEMPLATE } from './templates.js';
 
@@ -48,4 +52,5 @@ export async function initShopAuth(API_URL) {
     if (!isAuthenticated) {
         showShopLoginPrompt(elements);
     }
-} 
+}
+*/ 

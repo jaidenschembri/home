@@ -160,68 +160,7 @@ input:focus {
    HEADER NAV COMPONENTS
    ==================== */
 
-/* Sign In Button */
-.signin-title-bar {
-  justify-content: space-between;
-  padding-right: 0px;
-  pointer-events: none;
-  border: none;
-  border-bottom: none;
-}
-
-.signin-btn {
-  background: none;
-  border: none;
-  color: var(--signin-btn-fg);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 6px 18px;
-  margin-top: 0;
-  border-radius: var(--signin-btn-radius);
-  transition: text-decoration 0.2s ease;
-  pointer-events: auto;
-  font-family: var(--base-font);
-}
-
-.signin-btn:hover {
-  text-decoration: underline;
-}
-
-/* Nav Container */
-.nav-links {
-  display: flex;
-  align-items: center;
-}
-
-/* Nav Links */
-.nav-link {
-  pointer-events: auto;
-  text-decoration: none;
-  margin-right: 10px;
-  display: inline-block;
-  transition: text-decoration 0.2s ease;
-  font-size: 14px;
-}
-
-.nav-link:hover {
-  text-decoration: underline;
-  opacity: 1;
-}
-
-/* Signed In Text */
-.signed-in-text {
-  color: var(--signin-btn-fg);
-  font-size: 14px;
-  padding: 6px 18px;
-  margin-top: 0;
-  font-family: var(--base-font);
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.signed-in-text .username {
-  font-style: italic;
-}
+/* Header styles are now defined globally in base.css */
 
 /* ==================== 
    AUTOFILL OVERRIDES

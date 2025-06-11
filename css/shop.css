@@ -1,55 +1,26 @@
+/* Shop-specific styles using global components */
 .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
     padding: 1rem;
 }
 
 .product-card {
-    background: var(--window-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 1.5rem;
     text-align: center;
-    transition: transform 0.2s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
+    border: none; /* Remove extra border since .window already has one */
 }
 
 .product-image {
-    width: 100%;
     max-width: 300px;
     margin-bottom: 1.5rem;
-    border-radius: 4px;
-    overflow: hidden;
-    background: var(--window-bg);
-}
-
-.product-image img {
-    width: 100%;
-    height: auto;
-    display: block;
-    transition: transform 0.3s ease;
 }
 
 .product-card h3 {
-    margin: 0 0 1rem 0;
-    color: var(--text-color);
-    font-size: 1.2rem;
-    font-weight: normal;
     text-transform: lowercase;
 }
 
-.product-card .price {
-    font-size: 1.2rem;
-    color: var(--text-color);
-    margin: 1rem 0;
-    font-weight: normal;
-}
-
 .product-card .description {
-    color: var(--text-secondary);
     margin-bottom: 1.5rem;
     line-height: 1.5;
     font-size: 0.9rem;
@@ -61,59 +32,15 @@
     max-width: 200px;
 }
 
-.size-selector label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-    font-size: 0.9rem;
-}
-
-.size-selector select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background: var(--window-bg);
-    color: var(--text-color);
-    font-size: 0.9rem;
-    cursor: pointer;
-    font-family: inherit;
-}
-
-.size-selector select:focus {
-    outline: none;
-    border-color: var(--text-color);
-}
-
+/* Shop-specific responsive adjustments */
 #paypal-button-container {
     margin-top: 1.5rem;
     width: 100%;
     max-width: 300px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
-    .products-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
     .product-image {
         max-width: 250px;
     }
-}
-
-.coming-soon-container {
-    display: flex;
-    min-height: 20px;
-    width: 100%;
-}
-
-.coming-soon-box {
-    text-align: center;
-    font-size: 14px;
-    font-style: italic;
-    font-family: var(--base-font);
-    color: var(--color-fg);
-    background-color: var(--color-bg);
 }

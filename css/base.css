@@ -217,6 +217,69 @@ a:hover {
   text-transform: lowercase;
 }
 
+/* === HEADER NAVIGATION === */
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.nav-link {
+  pointer-events: auto;
+  text-decoration: none;
+  margin-right: 10px;
+  display: inline-block;
+  transition: text-decoration 0.2s ease;
+  font-size: 14px;
+  color: var(--header-fg);
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+/* === HEADER BUTTONS === */
+.signin-btn {
+  background: none;
+  border: none;
+  color: var(--signin-btn-fg);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 18px;
+  margin-top: 0;
+  border-radius: var(--signin-btn-radius);
+  transition: text-decoration 0.2s ease;
+  pointer-events: auto;
+  font-family: var(--base-font);
+}
+
+.signin-btn:hover {
+  text-decoration: underline;
+}
+
+.signed-in-text {
+  color: var(--signin-btn-fg);
+  font-size: 14px;
+  padding: 6px 18px;
+  margin-top: 0;
+  font-family: var(--base-font);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.signed-in-text .username {
+  font-style: italic;
+}
+
+.signin-title-bar {
+  justify-content: space-between;
+  padding-right: 0px;
+  pointer-events: none;
+  border: none;
+  border-bottom: none;
+}
+
 pre#ascii-art {
   font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
   font-size: 7px;

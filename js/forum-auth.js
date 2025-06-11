@@ -113,14 +113,12 @@ const LOGIN_PROMPT_TEMPLATE = (title, message = 'You must be signed in to view a
 export function showLoginPrompt(elements, title = 'Forum', message = 'You must be signed in to view and participate in the forum.') {
     const loginPromptContainer = document.getElementById('login-prompt');
     const forumContainer = document.querySelector('.forum-container');
-    const shopContainer = document.querySelector('.shop-container');
     
     if (!loginPromptContainer) return;
     
-    // Show login prompt and hide content
+    // Show login prompt and hide forum content only (shop remains public)
     loginPromptContainer.style.display = 'block';
     if (forumContainer) forumContainer.style.display = 'none';
-    if (shopContainer) shopContainer.style.display = 'none';
     
     // Apply the template with the provided title and message
     loginPromptContainer.innerHTML = LOGIN_PROMPT_TEMPLATE(title, message);
@@ -140,16 +138,11 @@ export function showLoginPrompt(elements, title = 'Forum', message = 'You must b
     
     // Listen for successful login event
     const loginHandler = () => {
-        console.log('Login detected! Loading content...');
-        // Hide login prompt and show content
+        console.log('Login detected! Loading forum content...');
+        // Hide login prompt and show forum content
         loginPromptContainer.style.display = 'none';
         if (forumContainer) forumContainer.style.display = 'block';
-        if (shopContainer) shopContainer.style.display = 'block';
-        if (shopContainer) {
-          document.dispatchEvent(new CustomEvent('shopLoginSuccess'));
-        } else {
-          document.dispatchEvent(new CustomEvent('forumLoginSuccess'));
-        }
+        document.dispatchEvent(new CustomEvent('forumLoginSuccess'));
         // Remove the event listener after successful login
         document.removeEventListener('userLoggedIn', loginHandler);
     };
