@@ -85,11 +85,8 @@ async function initializePayPalButton() {
         return;
     }
     
-    // Prevent multiple initializations
-    if (paypalInitialized) {
-        console.log('PayPal already initialized, skipping...');
-        return;
-    }
+    // Reset initialization flag to allow re-rendering when size changes
+    paypalInitialized = false;
     
     // Clear any existing content
     container.innerHTML = '';
@@ -141,68 +138,66 @@ async function initializePayPalButton() {
         const sizeSelector = document.getElementById('tshirt-size');
         const selectedSize = sizeSelector ? sizeSelector.value : 'M';
         
+        // Validate size selection
+        if (!selectedSize || selectedSize.trim() === '') {
+            container.innerHTML = '<p style="color: red; text-align: center;">Please select a size first</p>';
+            return;
+        }
+        
         console.log(`Initializing PayPal in ${paypalConfig.getEnvironment()} mode`);
 
-        // Show loading message
-        container.innerHTML = '<p style="text-align: center;">Loading payment options...</p>';
-
-        // Load PayPal SDK dynamically
+        // Load PayPal SDK
         await paypalLoader.loadSDK();
-        
-        // Get PayPal instance
         const paypal = await paypalLoader.getPayPal();
-        
-        // Clear loading message
-        container.innerHTML = '';
 
     paypal.Buttons({
         style: paypalConfig.getButtonStyle(),
-        createOrder: (data, actions) => {
+        createOrder: function(data, actions) {
             console.log('Creating PayPal order...');
+            
+            // Simple validation
+            if (!selectedSize) {
+                alert('Please select a size first');
+                return Promise.reject(new Error('No size selected'));
+            }
+            
             return actions.order.create({
                 purchase_units: [{
                     description: `${PRODUCT.name} (Size: ${selectedSize})`,
                     amount: {
                         currency_code: 'USD',
-                        value: PRODUCT.basePrice.toString()
-                    },
-                    custom_id: `${PRODUCT.id}-${selectedSize}`,
-                    reference_id: `${PRODUCT.id}-${selectedSize}-${Date.now()}`
-                }],
-                application_context: {
-                    brand_name: 'NoJava Shop',
-                    user_action: 'PAY_NOW'
-                }
+                        value: PRODUCT.basePrice.toFixed(2)
+                    }
+                }]
             });
         },
-        onApprove: async (data, actions) => {
-            console.log('PayPal payment approved, capturing order...');
-            try {
-                const order = await actions.order.capture();
-                console.log('Order captured successfully:', order);
-                await handleSuccessfulPayment(order, selectedSize);
-            } catch (error) {
-                console.error('Error capturing PayPal order:', error);
-                alert('There was an error processing your payment. Please contact support.');
-            }
+        onApprove: function(data, actions) {
+            console.log('Payment approved, capturing...');
+            
+            return actions.order.capture().then(function(details) {
+                console.log('Payment completed:', details);
+                
+                // Simple success handling
+                alert(`✅ Payment successful!\n\nOrder ID: ${details.id}\nAmount: $${PRODUCT.basePrice}\nSize: ${selectedSize}\n\n⚠️ This was a sandbox test transaction`);
+                
+                // Update UI
+                const container = document.getElementById('paypal-button-container');
+                if (container) {
+                    container.innerHTML = '<p style="color: green; text-align: center;">✅ Payment completed!</p>';
+                }
+                
+                return details;
+            });
         },
-        onError: (err) => {
-            console.error('PayPal Error:', err);
-            alert('There was an error with the payment system. Please try again or contact support.');
+        onError: function(err) {
+            console.error('PayPal error:', err);
+            alert('Payment failed. Please try again.');
         },
-        onCancel: (data) => {
-            console.log('PayPal payment cancelled by user:', data);
-            alert('Payment was cancelled. You can try again anytime.');
+        onCancel: function(data) {
+            console.log('Payment cancelled');
+            // No alert needed for user cancellation
         }
-        }).render('#paypal-button-container').then(() => {
-            console.log('PayPal button rendered successfully');
-            paypalInitialized = true;
-        }).catch(err => {
-            console.error('Error rendering PayPal button:', err);
-            if (container) {
-                container.innerHTML = '<p style="color: red; text-align: center;">Unable to load payment options</p>';
-            }
-        });
+    }).render('#paypal-button-container');
         
     } catch (error) {
         console.error('Error initializing PayPal:', error);
@@ -212,83 +207,19 @@ async function initializePayPalButton() {
     }
 }
 
-// Handle successful payment
-async function handleSuccessfulPayment(order, size) {
-    try {
-        // COMMENTED OUT - Backend purchase recording (requires authentication)
-        // Uncomment the code below to record purchases in backend with user authentication:
-        /*
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        console.log('Recording purchase in backend...', {
-            orderId: order.id,
-            productId: PRODUCT.id,
+// Simple success message function
+function showPurchaseSuccess(orderId, amount, size) {
+    console.log('Purchase completed successfully');
+    
+    // Dispatch event for any listeners
+    document.dispatchEvent(new CustomEvent('userPurchaseComplete', {
+        detail: { 
+            product: PRODUCT.id,
             size: size,
-            amount: PRODUCT.basePrice,
+            orderId: orderId,
             environment: paypalConfig.getEnvironment()
-        });
-
-        const API_URL = 'https://still-wood-forum-v2.jaidenschembri1.workers.dev';
-        const response = await fetch(`${API_URL}/api/purchases`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                orderId: order.id,
-                productId: PRODUCT.id,
-                size: size,
-                amount: PRODUCT.basePrice,
-                status: order.status,
-                environment: paypalConfig.getEnvironment(),
-                paypalData: {
-                    payerId: order.payer?.payer_id,
-                    payerEmail: order.payer?.email_address,
-                    captureId: order.purchase_units?.[0]?.payments?.captures?.[0]?.id,
-                    createTime: order.create_time,
-                    updateTime: order.update_time
-                }
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Backend response error:', errorData);
-            throw new Error(`Failed to record purchase: ${response.status}`);
         }
-
-        const result = await response.json();
-        console.log('Purchase recorded successfully:', result);
-        */
-        
-        // Show success message with order details
-        const orderInfo = `
-Order ID: ${order.id}
-Product: ${PRODUCT.name} (Size: ${size})
-Amount: $${PRODUCT.basePrice}
-${paypalConfig.getEnvironment() === 'sandbox' ? '\n(This was a test transaction)' : ''}
-        `.trim();
-        
-        alert(`Thank you for your purchase!\n\n${orderInfo}\n\nYou should receive a confirmation email shortly.`);
-        
-        // Refresh user data or update UI as needed
-        document.dispatchEvent(new CustomEvent('userPurchaseComplete', {
-            detail: { 
-                product: PRODUCT.id,
-                size: size,
-                orderId: order.id,
-                environment: paypalConfig.getEnvironment()
-            }
-        }));
-
-    } catch (error) {
-        console.error('Error processing purchase:', error);
-        alert(`There was an error recording your purchase: ${error.message}\n\nPlease contact support with your PayPal transaction ID: ${order.id}`);
-    }
+    }));
 }
 
 // Shop is now public - authentication only required for purchases

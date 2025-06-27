@@ -6,6 +6,8 @@ class PayPalLoader {
         this.isLoaded = false;
         this.isLoading = false;
         this.loadPromise = null;
+        this.retryCount = 0;
+        this.maxRetries = 3;
     }
 
     // Load PayPal SDK dynamically
@@ -49,7 +51,19 @@ class PayPalLoader {
             script.onerror = (error) => {
                 console.error('Failed to load PayPal SDK:', error);
                 this.isLoading = false;
-                reject(new Error('Failed to load PayPal SDK'));
+                
+                // Retry logic
+                if (this.retryCount < this.maxRetries) {
+                    this.retryCount++;
+                    console.log(`Retrying PayPal SDK load (${this.retryCount}/${this.maxRetries})...`);
+                    setTimeout(() => {
+                        this.loadPromise = null;
+                        this.loadSDK().then(resolve).catch(reject);
+                    }, 1000 * this.retryCount); // Progressive delay
+                } else {
+                    this.retryCount = 0;
+                    reject(new Error(`Failed to load PayPal SDK after ${this.maxRetries} attempts`));
+                }
             };
             
             // Add script to document head

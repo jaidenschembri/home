@@ -1,8 +1,8 @@
 // PayPal Configuration Management
 class PayPalConfig {
     constructor() {
-        // Set this to false for live environment
-        this.isProduction = true;
+        // Set this to false for sandbox/testing, true for live environment
+        this.isProduction = false;
         
         // PayPal Client IDs
         this.clientIds = {
@@ -14,8 +14,8 @@ class PayPalConfig {
         this.sdkOptions = {
             currency: 'USD',
             intent: 'capture',
-            // Add other components if needed: 'buttons,messages,funding-eligibility'
-            components: 'buttons'
+            components: 'buttons',
+            debug: false
         };
     }
     
@@ -35,7 +35,9 @@ class PayPalConfig {
             'client-id': this.getClientId(),
             'currency': this.sdkOptions.currency,
             'intent': this.sdkOptions.intent,
-            'components': this.sdkOptions.components
+            'components': this.sdkOptions.components,
+            'enable-funding': 'card,credit',
+            'disable-funding': 'venmo,paylater'
         });
         
         return `https://www.paypal.com/sdk/js?${params.toString()}`;
@@ -53,9 +55,56 @@ class PayPalConfig {
             layout: 'vertical',
             color: 'blue',
             shape: 'rect',
-            label: 'pay',
-            height: 40
+            height: 45,
+            tagline: false
         };
+    }
+    
+    // Get advanced PayPal SDK options
+    getAdvancedSDKOptions() {
+        return {
+            ...this.sdkOptions,
+            // Add additional funding sources
+            'enable-funding': 'venmo,paylater',
+            // Disable funding sources you don't want
+            'disable-funding': 'card,credit', // Remove if you want credit card options
+            'buyer-country': 'US'
+        };
+    }
+    
+    // Get environment-specific logging configuration
+    getLoggingConfig() {
+        return {
+            enabled: !this.isProduction, // Only log in sandbox
+            level: this.isProduction ? 'error' : 'debug'
+        };
+    }
+    
+    // Log messages based on environment
+    log(message, level = 'info', data = null) {
+        const config = this.getLoggingConfig();
+        
+        if (!config.enabled && level !== 'error') {
+            return;
+        }
+        
+        const prefix = `[PayPal-${this.getEnvironment()}]`;
+        
+        switch (level) {
+            case 'error':
+                console.error(prefix, message, data);
+                break;
+            case 'warn':
+                console.warn(prefix, message, data);
+                break;
+            case 'debug':
+                if (config.level === 'debug') {
+                    console.log(prefix, message, data);
+                }
+                break;
+            default:
+                console.log(prefix, message, data);
+        }
     }
 }
 
